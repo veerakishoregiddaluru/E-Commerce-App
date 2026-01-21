@@ -15,7 +15,7 @@ export const currency = "$";
 
 export default function App() {
   const [token, setToken] = useState(
-    localStorage.getItem("token") ? localStorage.getItem("token") : ""
+    localStorage.getItem("token") ? localStorage.getItem("token") : "",
   );
 
   useEffect(() => {

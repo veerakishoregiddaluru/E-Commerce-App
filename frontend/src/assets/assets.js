@@ -81,7 +81,7 @@ import about from "./about.png";
 import contact from "./contact.png";
 import kishore_logo from "./kishore_logo.png";
 import about_img from "./about_img.png";
-
+import kishore_trends1 from "./kishore_trends1.png";
 // ================= ASSETS EXPORT =================
 export const assets = {
   e_logo2,
@@ -111,6 +111,7 @@ export const assets = {
   contact,
   kishore_logo,
   about_img,
+  kishore_trends1,
 };
 export const products = [
   // ================= WOMEN TOPWEAR =================

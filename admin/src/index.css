@@ -21,3 +21,6 @@ textarea {
   border-radius: 5px;
   /* color: black; */
 }
+::-webkit-scrollbar {
+  display: none;
+}

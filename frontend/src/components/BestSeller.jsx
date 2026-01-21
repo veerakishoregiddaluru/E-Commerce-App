@@ -17,17 +17,43 @@ const BestSeller = () => {
   console.log(products);
 
   return (
-    <div className="my-10">
-      <div className="text-center text-3xl py-8">
-        <Title text1={"BEST"} text2={"SELLER"} />
-        <p className="w-3/4 m-auto text-xs sm:text-sm md:text-base text-gray-600">
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Reiciendis
-          laboriosam pariatur expedita, vel dicta magnam corrupti optio qui
-          animi, soluta et omnis hic quidem facere minima saepe atque
-          perferendis. Illum.
+    <div className="my-16 px-4 sm:px-6 lg:px-12">
+      {/* HEADING */}
+      <div className="text-center mb-12">
+        <h2 className="text-3xl sm:text-4xl font-bold tracking-wide text-gray-900">
+          <span className="text-gray-800">BEST</span>{" "}
+          <span className="text-indigo-600">SELLER</span>
+        </h2>
+
+        <p
+          className="
+      mt-4
+      max-w-2xl
+      mx-auto
+      text-sm sm:text-base
+      text-gray-600
+      leading-relaxed
+    "
+        >
+          Discover our most-loved styles, handpicked by customers across all
+          ages. From everyday essentials to standout fashion pieces, these best
+          sellers define comfort, quality, and timeless design — made to elevate
+          your wardrobe effortlessly.
         </p>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 gap-y-6">
+
+      {/* PRODUCTS GRID */}
+      <div
+        className="
+    grid
+    grid-cols-2
+    sm:grid-cols-3
+    md:grid-cols-4
+    lg:grid-cols-5
+    gap-5
+    gap-y-8
+  "
+      >
         {bestseller.map((item, index) => (
           <ProductItem
             key={index}

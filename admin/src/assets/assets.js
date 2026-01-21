@@ -4,6 +4,7 @@ import order_icon from "./order_icon.png";
 import upload_area from "./upload_area.png";
 import parcel_icon from "./parcel_icon.svg";
 import kishore_logo from "./kishore_logo.png";
+import kishore_trends1 from "./kishore_trends1.png";
 
 export const assets = {
   logo,
@@ -12,4 +13,5 @@ export const assets = {
   upload_area,
   parcel_icon,
   kishore_logo,
+  kishore_trends1,
 };

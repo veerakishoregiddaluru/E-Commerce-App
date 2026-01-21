@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
-
-import { bakendUrl } from "../App";
-import { toast } from "react-toastify";
-import { currency } from "../App.jsx";
-
 import axios from "axios";
-import { data } from "react-router-dom";
+import { toast } from "react-toastify";
+import { bakendUrl, currency } from "../App";
 
 const List = ({ token }) => {
   const [list, setList] = useState([]);
@@ -14,8 +10,6 @@ const List = ({ token }) => {
     try {
       const response = await axios.get(bakendUrl + "/api/product/list");
 
-      console.log(response.data);
-
       if (response.data.success) {
         toast.success("Products Loaded Successfully!");
         setList(response.data.products);
@@ -23,28 +17,23 @@ const List = ({ token }) => {
         toast.error("No Products Found!");
       }
     } catch (error) {
-      console.log("Error in Listing Products");
-
       toast.error(error.message);
     }
   };
-  console.log(list);
 
   const removeProduct = async (id) => {
     try {
       const response = await axios.delete(
         `${bakendUrl}/api/product/remove?id=${id}`,
-        { headers: { token } }
+        { headers: { token } },
       );
 
       if (response.data.success) {
-        await fetchList();
+        fetchList();
       } else {
         toast.error("Not Deleted!");
       }
     } catch (error) {
-      console.log("Error in Removing Products");
-
       toast.error(error.message);
     }
   };
@@ -53,49 +42,100 @@ const List = ({ token }) => {
     fetchList();
   }, []);
 
-  // useEffect(() => {
-  //   console.log(list);
-  // }, [list]);
-
   return (
-    <>
-      <p className="mb-2">All Products List</p>
+    <div className="p-4 sm:p-6 bg-slate-50 min-h-screen">
+      <p className="mb-5 text-xl font-bold text-slate-800">📦 All Products</p>
 
-      <div className="flex flex-col gap-2">
-        <div className="hidden md:grid grid-cols-[1fr_3fr_1fr_1fr_1fr] items-center py-1 px-2 border bg-gray-100 text-sm">
-          <b>Image</b>
-          <b>Name</b>
-          <b>Category</b>
-          <b>Price</b>
-          <b className="text-center">Action</b>
-        </div>
-
+      <div className="flex flex-col gap-4">
         {list.length === 0 ? (
-          <p>No products found</p>
+          <p className="text-slate-500">No products found</p>
         ) : (
-          list.map((item, index) => (
+          list.map((item) => (
             <div
-              key={index}
-              className="grid grid-cols-[1fr_3fr_1fr] md:grid-cols-[1fr_3fr_1fr_1fr_1fr] items-center gap-2 py-1 px-2 border text-sm "
+              key={item._id}
+              className="
+            relative
+            flex flex-col
+            sm:grid sm:grid-cols-[90px_1fr_140px_100px]
+            gap-4
+            border border-slate-200
+            p-4
+            rounded-2xl
+            bg-white
+            shadow-sm
+            hover:shadow-md
+            transition
+          "
             >
-              <img src={item.image[0]} alt="" className="w-12" />
-              <p>{item.name}</p>
-              <p>{item.category}</p>
-              <p>
-                {currency}
-                {item.price}.00
-              </p>
-              <p
+              {/* DELETE ICON */}
+              <button
                 onClick={() => removeProduct(item._id)}
-                className="text-right md:text-center cursor-pointer text-lg"
+                className="
+              absolute top-3 right-3
+              w-8 h-8
+              flex items-center justify-center
+              rounded-full
+              bg-slate-100
+              text-slate-400
+              hover:bg-red-100
+              hover:text-red-600
+              text-sm
+              font-bold
+              transition
+            "
+                title="Delete product"
               >
-                X
+                ✕
+              </button>
+
+              {/* IMAGE */}
+              <div className="flex items-center justify-center">
+                <img
+                  src={item.image[0]}
+                  alt={item.name}
+                  className="
+                w-20 h-20
+                object-contain
+                rounded-xl
+                bg-slate-50
+                p-2
+              "
+                />
+              </div>
+
+              {/* NAME */}
+              <div>
+                <p className="font-semibold text-slate-800">{item.name}</p>
+                <p className="text-xs text-slate-500 mt-0.5">Product Name</p>
+              </div>
+
+              {/* CATEGORY */}
+              <div className="flex items-center">
+                <span
+                  className="
+                inline-block
+                px-3 py-1
+                rounded-full
+                text-xs
+                font-medium
+                bg-indigo-100
+                text-indigo-700
+              "
+                >
+                  {item.category}
+                </span>
+              </div>
+
+              {/* PRICE */}
+              <p className="text-lg font-bold text-emerald-600">
+                {currency}
+                {item.price}
               </p>
             </div>
           ))
         )}
       </div>
-    </>
+    </div>
   );
 };
 
