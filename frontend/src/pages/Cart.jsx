@@ -39,11 +39,17 @@ const Cart = () => {
 
       {/* EMPTY CART STATE */}
       {cartData.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl shadow-sm">
+        <div className="flex flex-col items-center justify-center  text-center rounded-2xl shadow-sm">
           <img
-            src={assets.cart_icon || assets.empty_cart}
+            src={assets.empty_cart}
             alt="Empty Cart"
-            className="w-24 mb-6 opacity-80"
+            className="
+    w-36 sm:w-40 md:w-48 lg:w-56 xl:w-64
+    mb-6
+    rounded-2xl
+    object-contain
+    opacity-90
+  "
           />
 
           <h2 className="text-xl font-semibold text-gray-800">
