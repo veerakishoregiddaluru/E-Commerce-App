@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import { assets } from "../assets/assets";
 import { Link, NavLink } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
-
+import { toast } from "react-toastify";
 // ✅ Premium Heroicons (Outline)
 import {
   HiOutlineHome,
@@ -30,6 +30,7 @@ const Navbar = () => {
   } = useContext(ShopContext);
 
   const logOut = () => {
+    toast.success("User Logout Successfully!");
     navigate("/login");
     localStorage.removeItem("token");
     setToken("");

@@ -1,100 +1,112 @@
 import userModel from "../models/userModel.js";
-import bycrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import validator from "validator";
 
+// ================= CREATE TOKEN =================
 const createToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET);
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
-console.log(createToken);
 
+// ================= LOGIN USER =================
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     const user = await userModel.findOne({ email });
+
+    // ❌ User not found
     if (!user) {
-      return res.status(404).send({
+      return res.status(404).json({
         status: false,
-        message: "User Does Not Exist!",
+        message: "User does not exist",
       });
     }
 
-    const isMatch = await bycrypt.compare(password, user.password);
-    if (isMatch) {
-      const token = createToken(user._id);
+    const isMatch = await bcrypt.compare(password, user.password);
 
-      return res.status(200).send({
-        status: true,
-        message: "User Login Successfully!",
-        token: token,
-      });
-    } else {
-      return res.status(404).send({
+    // ❌ Wrong password
+    if (!isMatch) {
+      return res.status(401).json({
         status: false,
-        messsage: "Invalid Credentials!",
+        message: "Invalid credentials",
       });
     }
+
+    // ✅ Success
+    const token = createToken(user._id);
+
+    return res.status(200).json({
+      status: true,
+      message: "Login successful",
+      token,
+    });
   } catch (error) {
-    console.error("Error in User Registration", error);
-    res.status(500).send({
+    console.error("Login error:", error);
+    return res.status(500).json({
       status: false,
-      message: "Internal Server Error!",
+      message: "Internal server error",
     });
   }
 };
 
+// ================= REGISTER USER =================
 const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
+    // ❌ User already exists
     const existUser = await userModel.findOne({ email });
     if (existUser) {
-      return res.status(404).send({
+      return res.status(409).json({
         status: false,
-        message: "User Already Exist!",
+        message: "User already exists",
       });
     }
+
+    // ❌ Invalid email
     if (!validator.isEmail(email)) {
-      return res.status(404).send({
+      return res.status(400).json({
         status: false,
-        message: "Please enter valid email!",
+        message: "Please enter a valid email",
       });
     }
 
+    // ❌ Weak password
     if (password.length < 8) {
-      return res.status(404).send({
+      return res.status(400).json({
         status: false,
-        message: "Please enter strong password!",
+        message: "Password must be at least 8 characters",
       });
     }
 
-    const salt = await bycrypt.genSalt(10);
-    const hashedPassword = await bycrypt.hash(password, salt);
+    // ✅ Hash password (FIXED bcrypt usage)
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = new userModel({
+    const user = await userModel.create({
       name,
       email,
       password: hashedPassword,
     });
 
-    const user = await newUser.save();
     const token = createToken(user._id);
 
-    res.status(201).send({
+    return res.status(201).json({
       status: true,
-      message: "User Registered Successfully!",
-      token: token,
+      message: "User registered successfully",
+      token,
     });
   } catch (error) {
-    console.error("Error in User Registration", error);
-    res.status(500).send({
+    console.error("Register error:", error);
+    return res.status(500).json({
       status: false,
-      message: "Internal Server Error!",
+      message: "Internal server error",
     });
   }
 };
 
+// ================= ADMIN LOGIN =================
 const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -103,38 +115,43 @@ const adminLogin = async (req, res) => {
       email === process.env.ADMIN_EMAIL &&
       password === process.env.ADMIN_PASSWORD
     ) {
-      const token = jwt.sign(email + password, process.env.JWT_SECRET);
-      res.status(200).send({
+      const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+        expiresIn: "1d",
+      });
+
+      return res.status(200).json({
         success: true,
-        message: "Admin Access",
+        message: "Admin access granted",
         token,
       });
-    } else {
-      res.status(404).send({
-        status: false,
-        message: "Invalid Credentials!",
-      });
     }
-  } catch (error) {
-    console.error("Error in Admin Login", error);
-    res.status(500).send({
+
+    return res.status(401).json({
       status: false,
-      message: "Internal Server Error!",
+      message: "Invalid credentials",
+    });
+  } catch (error) {
+    console.error("Admin login error", error);
+    return res.status(500).json({
+      status: false,
+      message: "Internal server error",
     });
   }
 };
 
+// ================= USER PROFILE =================
 export const getUserProfile = async (req, res) => {
   try {
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       user: req.user,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to fetch profile",
     });
   }
 };
+
 export { loginUser, registerUser, adminLogin };
