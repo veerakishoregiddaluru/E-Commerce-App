@@ -15,7 +15,7 @@ const loginUser = async (req, res) => {
 
     const user = await userModel.findOne({ email });
 
-    // ❌ User not found
+    //  User not found
     if (!user) {
       return res.status(404).json({
         status: false,
@@ -25,7 +25,7 @@ const loginUser = async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
 
-    // ❌ Wrong password
+    //  Wrong password
     if (!isMatch) {
       return res.status(401).json({
         status: false,
@@ -55,7 +55,7 @@ const registerUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // ❌ User already exists
+    //  User already exists
     const existUser = await userModel.findOne({ email });
     if (existUser) {
       return res.status(409).json({
@@ -64,7 +64,7 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // ❌ Invalid email
+    //  Invalid email
     if (!validator.isEmail(email)) {
       return res.status(400).json({
         status: false,
@@ -72,7 +72,7 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // ❌ Weak password
+    //  Weak password
     if (password.length < 8) {
       return res.status(400).json({
         status: false,

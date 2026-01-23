@@ -42,7 +42,6 @@ const Login = () => {
         }
       }
     } catch (error) {
-      // ✅ HANDLE BACKEND ERRORS PROPERLY
       if (error.response && error.response.data?.message) {
         toast.error(error.response.data.message);
       } else {
