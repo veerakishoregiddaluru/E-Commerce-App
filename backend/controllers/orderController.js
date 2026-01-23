@@ -232,15 +232,26 @@ const verifyRazorpay = async (req, res) => {
 ========================= */
 const allOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({}).lean();
+    let orders = await orderModel.find({}).lean();
 
-    res.status(200).send({
+    orders = orders.map((order) => ({
+      ...order,
+      items: Array.isArray(order.items) ? order.items : [],
+      address: order.address || {
+        firstName: "Unknown",
+        lastName: "",
+        phone: "N/A",
+      },
+      status: order.status || "Order Placed",
+    }));
+
+    res.status(200).json({
       success: true,
-      orders: orders || [],
+      orders,
     });
   } catch (error) {
-    console.error("ADMIN ORDER LIST ERROR:", error);
-    res.status(500).send({
+    console.error("🔥 ADMIN ORDER ERROR:", error);
+    res.status(500).json({
       success: false,
       message: "Failed to fetch orders",
     });
