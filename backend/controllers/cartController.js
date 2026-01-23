@@ -38,18 +38,34 @@ const addToCart = async (req, res) => {
 
 const updateCart = async (req, res) => {
   try {
-    const { userId, itemId, size, quantity } = req.body;
+    const userId = req.userId; // ✅ FIXED
+    const { itemId, size, quantity } = req.body;
+
     const userData = await userModel.findById(userId);
-    let cartData = await userData.cartData;
+    if (!userData) {
+      return res.status(404).send({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    let cartData = userData.cartData || {};
+
+    // ✅ SAFETY CHECKS
+    if (!cartData[itemId]) {
+      cartData[itemId] = {};
+    }
+
     cartData[itemId][size] = quantity;
+
     await userModel.findByIdAndUpdate(userId, { cartData });
-    await userData.save();
-    res.status(201).send({
+
+    res.status(200).send({
       success: true,
       message: "Cart Updated",
     });
   } catch (error) {
-    console.error("Error in Add to Cart", error);
+    console.error("Error in Update Cart", error);
     res.status(500).send({
       success: false,
       message: "Internal Server!",
@@ -59,7 +75,7 @@ const updateCart = async (req, res) => {
 
 const getUser = async (req, res) => {
   try {
-    const { userId } = req.userId;
+    const userId = req.userId;
     const userData = await userModel.findById(userId);
     let cartData = await userData.cartData;
     res.status(200).send({
@@ -67,7 +83,13 @@ const getUser = async (req, res) => {
       message: "Got User",
       cartData,
     });
-  } catch (error) {}
+  } catch (error) {
+    console.error("Error in Update Cart", error);
+    res.status(500).send({
+      success: false,
+      message: "Internal Server!",
+    });
+  }
 };
 
 export { addToCart, updateCart, getUser };

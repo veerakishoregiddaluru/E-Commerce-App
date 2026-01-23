@@ -26,86 +26,134 @@ const Cart = () => {
         }
       }
 
-      console.log(tempData);
       setCartData(tempData);
     }
   }, [cartItems, products]);
 
   return (
-    <div className="border-t pt-14">
-      <div className="text-2xl mb-3">
+    <div className="min-h-screen bg-[#f7f8fc] border-t pt-16 px-4 md:px-10">
+      {/* Title */}
+      <div className="text-2xl mb-8">
         <Title text1={"YOUR"} text2={"CART"} />
       </div>
-      <div>
-        {cartData.map((item, index) => {
-          const productData = products.find(
-            (product) => product._id === item._id,
-          );
 
-          return (
-            <div
-              key={index}
-              className="py-4 border-t border-b text-gray-700 grid grid-cols-[4fr_0.5fr_0.5fr] sm:grid-cols-[4fr_2fr_0.5fr] items-center gap-4 "
-            >
-              <div className="flex items-start gap-6">
-                <img
-                  src={productData.image[0]}
-                  className="w-16 sm:w-20"
-                  alt=""
-                />
-                <div className="">
-                  <p className="text-xs sm:text-lg font-medium ">
-                    {productData.name}
-                  </p>
-                  <div className="flex items-center gap-5 mt-2">
-                    <p>
-                      {currency}
-                      {productData.price}.00
-                    </p>
-                    <p className="px-2 sm:px-3 sm:py-1 border bg-slate-100">
-                      {item.size}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <input
-                onChange={(e) =>
-                  e.target.value === "" || e.target.value === "0"
-                    ? null
-                    : updateQuantity(
-                        item._id,
-                        item.size,
-                        Number(e.target.value),
-                      )
-                }
-                type="number"
-                min={1}
-                defaultValue={item.quantity}
-                className="border max-w-10 sm:max-w-20 px-1 sm:px-2 py-1 "
-              />
-              <img
-                onClick={() => updateQuantity(item._id, item.size, 0)}
-                src={assets.bin_icon}
-                className="w-4 mr-4 sm:w-5 cursor-pointer "
-                alt=""
-              />
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex justify-end my-20">
-        <div className="w-full sm:w-[450px]">
-          <CartTotal />
-          <div className="w-full text-end ">
-            <button
-              onClick={() => navigate("/place-order")}
-              className="bg-black text-white text-sm my-8 px-5 py-3 text-center"
-            >
-              PROCEED TO CHECKOUT
-            </button>
-          </div>
+      {/* EMPTY CART STATE */}
+      {cartData.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl shadow-sm">
+          <img
+            src={assets.cart_icon || assets.empty_cart}
+            alt="Empty Cart"
+            className="w-24 mb-6 opacity-80"
+          />
+
+          <h2 className="text-xl font-semibold text-gray-800">
+            Your cart is empty
+          </h2>
+          <p className="text-gray-500 mt-2 max-w-sm">
+            Looks like you haven’t added anything yet. Start shopping to see
+            products here.
+          </p>
+
+          <button
+            onClick={() => navigate("/")}
+            className="mt-6 px-6 py-3 rounded-lg text-sm font-medium
+              bg-indigo-600 text-white
+              hover:bg-indigo-700 transition"
+          >
+            Shop Now
+          </button>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* CART ITEMS */}
+          <div className="space-y-4">
+            {cartData.map((item, index) => {
+              const productData = products.find(
+                (product) => product._id === item._id,
+              );
+
+              return (
+                <div
+                  key={index}
+                  className="bg-white rounded-xl shadow-sm border
+                    hover:shadow-md transition p-4 sm:p-5
+                    grid grid-cols-1 sm:grid-cols-[4fr_1fr_0.5fr] gap-4 items-center"
+                >
+                  {/* Product Info */}
+                  <div className="flex gap-4 items-center">
+                    <img
+                      src={productData.image[0]}
+                      className="w-16 h-20 sm:w-20 sm:h-24 rounded-lg object-cover border"
+                      alt=""
+                    />
+
+                    <div>
+                      <p className="text-sm sm:text-base font-semibold text-gray-900">
+                        {productData.name}
+                      </p>
+
+                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                        <span className="font-semibold text-indigo-600">
+                          {currency}
+                          {productData.price}.00
+                        </span>
+
+                        <span className="px-3 py-1 rounded-full bg-gray-100 text-black">
+                          Size {item.size}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quantity */}
+                  <input
+                    onChange={(e) =>
+                      e.target.value === "" || e.target.value === "0"
+                        ? null
+                        : updateQuantity(
+                            item._id,
+                            item.size,
+                            Number(e.target.value),
+                          )
+                    }
+                    type="number"
+                    min={1}
+                    defaultValue={item.quantity}
+                    className="w-20 px-3 py-2 rounded-md border
+                      focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+
+                  {/* Remove */}
+                  <img
+                    onClick={() => updateQuantity(item._id, item.size, 0)}
+                    src={assets.bin_icon}
+                    className="w-5 cursor-pointer opacity-70 hover:opacity-100 transition"
+                    alt=""
+                  />
+                </div>
+              );
+            })}
+          </div>
+
+          {/* TOTAL & CHECKOUT */}
+          <div className="flex justify-end my-16">
+            <div className="w-full sm:w-[420px] bg-white rounded-2xl shadow-sm p-6">
+              <CartTotal />
+
+              <div className="w-full text-end">
+                <button
+                  onClick={() => navigate("/place-order")}
+                  className="mt-6 w-full px-6 py-3 rounded-lg text-sm font-semibold
+                    bg-gray-900 text-white
+                    hover:bg-indigo-600 transition"
+                >
+                  PROCEED TO CHECKOUT
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
