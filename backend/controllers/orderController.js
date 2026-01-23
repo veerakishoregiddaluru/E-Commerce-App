@@ -15,21 +15,28 @@ const razorpayInstance = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-const enrichItemsWithImage = async (items) => {
+const enrichItemsWithImage = async (items = []) => {
+  if (!Array.isArray(items)) return [];
+
   return await Promise.all(
     items.map(async (item) => {
-      const product = await productModel.findOne({
-        name: item.name, // fallback
-      });
+      let product = null;
+
+      if (item.productId) {
+        product = await productModel.findById(item.productId);
+      } else if (item.name) {
+        product = await productModel.findOne({ name: item.name });
+      }
 
       return {
         ...item,
-        productId: product?._id, // ✅ attach it now
-        image: product?.image || [],
+        productId: product?._id || null,
+        image: Array.isArray(product?.image) ? product.image : [],
       };
     }),
   );
 };
+
 console.log(enrichItemsWithImage);
 
 /* =========================
@@ -224,20 +231,52 @@ const verifyRazorpay = async (req, res) => {
    ADMIN & USER
 ========================= */
 const allOrders = async (req, res) => {
-  const orders = await orderModel.find({});
-  res.status(200).send({ success: true, orders });
+  try {
+    const orders = await orderModel.find({}).lean();
+
+    res.status(200).send({
+      success: true,
+      orders: orders || [],
+    });
+  } catch (error) {
+    console.error("ADMIN ORDER LIST ERROR:", error);
+    res.status(500).send({
+      success: false,
+      message: "Failed to fetch orders",
+    });
+  }
 };
 
 const userOrder = async (req, res) => {
-  const orders = await orderModel.find({ userId: req.userId });
-  res.status(200).send({ success: true, orders });
+  try {
+    const orders = await orderModel.find({ userId: req.userId }).lean();
+
+    res.status(200).send({
+      success: true,
+      orders: orders || [],
+    });
+  } catch (error) {
+    console.error("USER ORDER ERROR:", error);
+    res.status(500).send({
+      success: false,
+      message: "Failed to fetch user orders",
+    });
+  }
 };
 
 const updateStatus = async (req, res) => {
-  await orderModel.findByIdAndUpdate(req.body.orderId, {
-    status: req.body.status,
-  });
-  res.status(200).send({ success: true, message: "Status Updated" });
+  try {
+    await orderModel.findByIdAndUpdate(req.body.orderId, {
+      status: req.body.status,
+    });
+
+    res.status(200).send({ success: true, message: "Status Updated" });
+  } catch (error) {
+    res.status(500).send({
+      success: false,
+      message: "Failed to update order status",
+    });
+  }
 };
 
 export {
