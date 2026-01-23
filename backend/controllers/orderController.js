@@ -1,13 +1,13 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
+import productModel from "../models/productModel.js"; // ✅ REQUIRED
 import Stripe from "stripe";
 import Razorpay from "razorpay";
 
-// Global variables
+// ================= CONFIG =================
 const currency = "inr";
 const deliveryCharge = 10;
 
-// Payment gateways
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const razorpayInstance = new Razorpay({
@@ -15,17 +15,32 @@ const razorpayInstance = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+// ================= HELPER =================
+const enrichItemsWithImage = async (items) => {
+  return await Promise.all(
+    items.map(async (item) => {
+      const product = await productModel.findById(item.productId);
+      return {
+        ...item,
+        image: product?.image || [],
+      };
+    }),
+  );
+};
+
 /* =========================
    PLACE ORDER (COD)
 ========================= */
 const placeOrder = async (req, res) => {
   try {
     const { items, amount, address } = req.body;
-    const userId = req.userId; // ✅ FIX
+    const userId = req.userId;
+
+    const enrichedItems = await enrichItemsWithImage(items);
 
     const orderData = {
       userId,
-      items,
+      items: enrichedItems,
       address,
       amount,
       paymentMethod: "COD",
@@ -57,28 +72,25 @@ const placeOrder = async (req, res) => {
 const placeOrderStripe = async (req, res) => {
   try {
     const { items, amount, address } = req.body;
-    const userId = req.userId; // ✅ FIX
+    const userId = req.userId;
     const { origin } = req.headers;
 
-    const orderData = {
+    const enrichedItems = await enrichItemsWithImage(items);
+
+    const newOrder = await orderModel.create({
       userId,
-      items,
+      items: enrichedItems,
       address,
       amount,
       paymentMethod: "Stripe",
       payment: false,
       date: Date.now(),
-    };
-
-    const newOrder = new orderModel(orderData);
-    await newOrder.save();
+    });
 
     const line_items = items.map((item) => ({
       price_data: {
         currency,
-        product_data: {
-          name: item.name,
-        },
+        product_data: { name: item.name },
         unit_amount: Math.round(item.price * 100),
       },
       quantity: item.quantity,
@@ -87,9 +99,7 @@ const placeOrderStripe = async (req, res) => {
     line_items.push({
       price_data: {
         currency,
-        product_data: {
-          name: "Delivery Charges",
-        },
+        product_data: { name: "Delivery Charges" },
         unit_amount: Math.round(deliveryCharge * 100),
       },
       quantity: 1,
@@ -108,7 +118,7 @@ const placeOrderStripe = async (req, res) => {
       success_url: session.url,
     });
   } catch (error) {
-    console.error("Error in Placing order!", error);
+    console.error("Stripe Order Error:", error);
     res.status(500).send({
       success: false,
       message: "Internal Server Error!",
@@ -122,29 +132,19 @@ const placeOrderStripe = async (req, res) => {
 const verifyStripe = async (req, res) => {
   try {
     const { orderId, success } = req.body;
-    const userId = req.userId; // ✅ FIX
+    const userId = req.userId;
 
     if (success === "true") {
       await orderModel.findByIdAndUpdate(orderId, { payment: true });
       await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
-      res.status(200).send({
-        success: true,
-        message: "Stripe Verified",
-      });
+      res.status(200).send({ success: true, message: "Stripe Verified" });
     } else {
       await orderModel.findByIdAndDelete(orderId);
-      res.status(200).send({
-        success: false,
-        message: "Stripe Not Verified!",
-      });
+      res.status(200).send({ success: false, message: "Stripe Not Verified!" });
     }
   } catch (error) {
-    console.error("Error in Verifying Stripe order!", error);
-    res.status(500).send({
-      success: false,
-      message: "Internal Server Error!",
-    });
+    res.status(500).send({ success: false, message: "Internal Server Error!" });
   }
 };
 
@@ -154,20 +154,19 @@ const verifyStripe = async (req, res) => {
 const placeOrderRazorpay = async (req, res) => {
   try {
     const { items, amount, address } = req.body;
-    const userId = req.userId; // ✅ FIX
+    const userId = req.userId;
 
-    const orderData = {
+    const enrichedItems = await enrichItemsWithImage(items);
+
+    const newOrder = await orderModel.create({
       userId,
-      items,
+      items: enrichedItems,
       address,
       amount,
       paymentMethod: "Razorpay",
       payment: false,
       date: Date.now(),
-    };
-
-    const newOrder = new orderModel(orderData);
-    await newOrder.save();
+    });
 
     const options = {
       amount: Math.round(amount * 100),
@@ -184,7 +183,6 @@ const placeOrderRazorpay = async (req, res) => {
       key_id: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
-    console.error("Razorpay Order Error:", error);
     res.status(500).send({
       success: false,
       message: "Error Occurred in Razorpay",
@@ -198,7 +196,7 @@ const placeOrderRazorpay = async (req, res) => {
 const verifyRazorpay = async (req, res) => {
   try {
     const { razorpay_order_id } = req.body;
-    const userId = req.userId; // ✅ FIX
+    const userId = req.userId;
 
     const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id);
 
@@ -206,94 +204,42 @@ const verifyRazorpay = async (req, res) => {
       await orderModel.findByIdAndUpdate(orderInfo.receipt, { payment: true });
       await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
-      res.status(200).send({
-        success: true,
-        message: "Payment Successful",
-      });
+      res.status(200).send({ success: true, message: "Payment Successful" });
     } else {
-      res.status(400).send({
-        success: false,
-        message: "Payment Failed!",
-      });
+      res.status(400).send({ success: false, message: "Payment Failed!" });
     }
   } catch (error) {
-    console.error("Razorpay Verify Error:", error);
     res.status(500).send({
       success: false,
-      message: "Error Occurred in Razorpay Verification!",
+      message: "Razorpay Verification Error!",
     });
   }
 };
 
 /* =========================
-   ADMIN: ALL ORDERS
+   ADMIN & USER
 ========================= */
 const allOrders = async (req, res) => {
-  try {
-    const orders = await orderModel.find({});
-    res.status(200).send({
-      success: true,
-      message: "All Orders",
-      orders,
-    });
-  } catch (error) {
-    console.error("Error in Fetching Orders", error);
-    res.status(500).send({
-      success: false,
-      message: "Internal Server Error!",
-    });
-  }
+  const orders = await orderModel.find({});
+  res.status(200).send({ success: true, orders });
 };
 
-/* =========================
-   USER ORDERS
-========================= */
 const userOrder = async (req, res) => {
-  try {
-    const userId = req.userId; // ✅ FIX
-
-    const orders = await orderModel.find({ userId });
-
-    res.status(200).send({
-      success: true,
-      message: "User Orders",
-      orders,
-    });
-  } catch (error) {
-    console.error("Error in Fetching User Orders", error);
-    res.status(500).send({
-      success: false,
-      message: "Internal Server Error!",
-    });
-  }
+  const orders = await orderModel.find({ userId: req.userId });
+  res.status(200).send({ success: true, orders });
 };
 
-/* =========================
-   UPDATE ORDER STATUS
-========================= */
 const updateStatus = async (req, res) => {
-  try {
-    const { orderId, status } = req.body;
-
-    await orderModel.findByIdAndUpdate(orderId, { status });
-
-    res.status(200).send({
-      success: true,
-      message: "Status Updated",
-    });
-  } catch (error) {
-    console.error("Error in Updating Order Status", error);
-    res.status(500).send({
-      success: false,
-      message: "Internal Server Error!",
-    });
-  }
+  await orderModel.findByIdAndUpdate(req.body.orderId, {
+    status: req.body.status,
+  });
+  res.status(200).send({ success: true, message: "Status Updated" });
 };
 
 export {
   placeOrder,
-  placeOrderRazorpay,
   placeOrderStripe,
+  placeOrderRazorpay,
   verifyStripe,
   verifyRazorpay,
   allOrders,
