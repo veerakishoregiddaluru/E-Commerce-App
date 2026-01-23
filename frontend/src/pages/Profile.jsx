@@ -113,15 +113,45 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* ================= ORDERS (PREMIUM UI) ================= */}
+        {/* ================= ORDERS ================= */}
         <div className="mt-12">
           <h3 className="text-lg font-semibold mb-5 text-gray-800">
             My Orders
           </h3>
 
           {orders.length === 0 ? (
-            <div className="text-center py-10 text-gray-400 text-sm">
-              No orders yet
+            /* 🔥 PREMIUM EMPTY STATE (ONLY CHANGED PART) */
+            <div className="flex flex-col items-center justify-center py-14 text-center">
+              <div className="mb-5 h-20 w-20 rounded-full bg-gradient-to-br from-gray-800 to-black flex items-center justify-center shadow-lg">
+                <svg
+                  className="h-9 w-9 text-white opacity-80"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m14-9l2 9M9 22h6"
+                  />
+                </svg>
+              </div>
+
+              <h4 className="text-lg font-semibold text-gray-800">
+                No Orders Yet
+              </h4>
+              <p className="text-sm text-gray-500 mt-2 max-w-xs">
+                You haven’t placed any orders yet. Start shopping and enjoy a
+                premium experience ✨
+              </p>
+
+              <button
+                onClick={() => navigate("/")}
+                className="mt-6 px-7 py-3 rounded-full bg-gradient-to-r from-black to-gray-800 text-white text-sm font-medium shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl active:scale-95"
+              >
+                Order Now →
+              </button>
             </div>
           ) : (
             <div className="space-y-5">
@@ -130,11 +160,9 @@ const Profile = () => {
                   key={order._id}
                   className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm hover:shadow-lg transition-all duration-300"
                 >
-                  {/* Gradient accent */}
                   <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-indigo-500 to-pink-500" />
 
                   <div className="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    {/* LEFT */}
                     <div>
                       <p className="font-semibold text-gray-800">
                         Order #{order._id.slice(-6)}
@@ -154,12 +182,10 @@ const Profile = () => {
                       </p>
                     </div>
 
-                    {/* RIGHT */}
                     <div className="text-right">
                       <p className="text-lg font-bold text-indigo-600">
                         ₹{order.amount || order.totalAmount || 0}
                       </p>
-
                       <span className="inline-block mt-1 px-3 py-1 text-xs rounded-full bg-indigo-50 text-indigo-600 font-medium">
                         {order.status || "Processing"}
                       </span>

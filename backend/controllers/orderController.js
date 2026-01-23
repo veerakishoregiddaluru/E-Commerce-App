@@ -15,18 +15,22 @@ const razorpayInstance = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// ================= HELPER =================
 const enrichItemsWithImage = async (items) => {
   return await Promise.all(
     items.map(async (item) => {
-      const product = await productModel.findById(item.productId);
+      const product = await productModel.findOne({
+        name: item.name, // fallback
+      });
+
       return {
         ...item,
+        productId: product?._id, // ✅ attach it now
         image: product?.image || [],
       };
     }),
   );
 };
+console.log(enrichItemsWithImage);
 
 /* =========================
    PLACE ORDER (COD)
