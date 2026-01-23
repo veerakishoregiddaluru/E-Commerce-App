@@ -2,6 +2,7 @@ import userModel from "../models/userModel.js";
 import bycrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import validator from "validator";
+
 const createToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET);
 };
@@ -123,4 +124,17 @@ const adminLogin = async (req, res) => {
   }
 };
 
+export const getUserProfile = async (req, res) => {
+  try {
+    res.status(200).json({
+      success: true,
+      user: req.user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch profile",
+    });
+  }
+};
 export { loginUser, registerUser, adminLogin };

@@ -7,9 +7,12 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true },
     cartData: { type: Object, default: {} },
   },
-  { minimize: false }
+  {
+    minimize: false,
+    timestamps: true, // ✅ adds createdAt & updatedAt automatically
+  },
 );
 
-const userModel = mongoose.model.user || mongoose.model("user", userSchema);
+const userModel = mongoose.models.user || mongoose.model("user", userSchema);
 
 export default userModel;

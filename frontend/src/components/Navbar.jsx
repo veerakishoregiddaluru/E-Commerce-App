@@ -3,6 +3,21 @@ import { assets } from "../assets/assets";
 import { Link, NavLink } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
 
+// ✅ Premium Heroicons (Outline)
+import {
+  HiOutlineHome,
+  HiOutlineShoppingBag,
+  HiOutlineInformationCircle,
+  HiOutlinePhone,
+} from "react-icons/hi2";
+
+const navItems = [
+  { name: "Home", path: "/", icon: HiOutlineHome },
+  { name: "Collection", path: "/collection", icon: HiOutlineShoppingBag },
+  { name: "About", path: "/about", icon: HiOutlineInformationCircle },
+  { name: "Contact", path: "/contact", icon: HiOutlinePhone },
+];
+
 const Navbar = () => {
   const [visible, setVisible] = useState(false);
   const {
@@ -23,16 +38,12 @@ const Navbar = () => {
 
   return (
     <>
-      {/* LOGO ZOOM ANIMATION */}
+      {/* LOGO ANIMATION */}
       <style>
         {`
           @keyframes logoPulse {
-            0%, 100% {
-              transform: scale(1);
-            }
-            50% {
-              transform: scale(1.3);
-            }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
           }
           .logo-animate {
             animation: logoPulse 3s ease-in-out infinite;
@@ -44,36 +55,37 @@ const Navbar = () => {
         <div className="flex items-center justify-between px-4 sm:px-6 lg:px-12 py-3 sm:py-4 lg:py-5 font-medium">
           {/* LOGO */}
           <NavLink to="/">
-            <div className="flex items-center gap-2">
-              <img
-                src={assets.kishore_trends1}
-                alt="Kishore Trends Logo"
-                className="
-                  w-16 h-16
-                  sm:w-18 sm:h-18
-                  md:w-[88px] md:h-[88px]
-                  lg:w-[112px] lg:h-[112px]
-                  xl:w-[120px] xl:h-[120px]
-                  object-contain
-                  rounded-2xl
-                  logo-animate
-                "
-              />
-            </div>
+            <img
+              src={assets.kishore_trends1}
+              alt="Kishore Trends Logo"
+              className="
+                w-16 h-16
+                sm:w-20 sm:h-20
+                md:w-[90px] md:h-[90px]
+                lg:w-[110px] lg:h-[110px]
+                object-contain rounded-2xl logo-animate
+              "
+            />
           </NavLink>
 
-          {/* DESKTOP MENU */}
-          <ul className="hidden sm:flex gap-6 lg:gap-10 text-sm lg:text-base text-gray-700">
-            {["Home", "Collection", "About", "Contact"].map((item) => (
-              <NavLink
-                key={item}
-                to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
-                className="relative group"
-              >
-                <p className="py-1">{item}</p>
-                <span className="absolute left-1/2 -bottom-1 w-0 h-[2px] bg-gray-800 transition-all duration-300 group-hover:w-1/2 group-hover:left-1/4"></span>
-              </NavLink>
-            ))}
+          {/* DESKTOP MENU (ICON TOP, TEXT BELOW) */}
+          <ul className="hidden sm:flex gap-10 lg:gap-14">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.name}
+                  to={item.path}
+                  className="group flex flex-col items-center text-gray-700"
+                >
+                  <Icon className="w-6 h-6 text-gray-600 group-hover:text-indigo-600 group-hover:scale-110 transition-all duration-300" />
+                  <span className="text-sm mt-1 font-medium tracking-wide">
+                    {item.name}
+                  </span>
+                  <span className="mt-1 h-[2px] w-0 bg-indigo-600 transition-all duration-300 group-hover:w-full"></span>
+                </NavLink>
+              );
+            })}
           </ul>
 
           {/* RIGHT ICONS */}
@@ -133,7 +145,7 @@ const Navbar = () => {
               </p>
             </Link>
 
-            {/* MOBILE MENU ICON */}
+            {/* MOBILE MENU */}
             <img
               src={assets.menu_icon}
               onClick={() => setVisible(true)}
@@ -145,7 +157,7 @@ const Navbar = () => {
 
         {/* MOBILE SIDEBAR */}
         <div
-          className={`fixed top-0 right-0 bottom-0 bg-white z-50 overflow-hidden transition-all duration-300 ${
+          className={`fixed top-0 right-0 bottom-0 bg-white z-50 transition-all duration-300 ${
             visible ? "w-full" : "w-0"
           }`}
         >
@@ -154,20 +166,24 @@ const Navbar = () => {
               onClick={() => setVisible(false)}
               className="flex items-center gap-3 p-4 border-b"
             >
-              <img src={assets.back_icon} className="h-4" />
+              <img src={assets.back_icon} className="h-4" alt="Back" />
               <p className="font-medium">Back</p>
             </div>
 
-            {["Home", "Collection", "About", "Contact"].map((item) => (
-              <NavLink
-                key={item}
-                to={item === "Home" ? "/" : `/${item.toLowerCase()}`}
-                className="py-4 pl-6 border-b text-base"
-                onClick={() => setVisible(false)}
-              >
-                {item}
-              </NavLink>
-            ))}
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.name}
+                  to={item.path}
+                  className="py-4 pl-6 border-b text-base flex items-center gap-4"
+                  onClick={() => setVisible(false)}
+                >
+                  <Icon className="w-5 h-5 text-indigo-600" />
+                  <span>{item.name}</span>
+                </NavLink>
+              );
+            })}
           </div>
         </div>
       </div>

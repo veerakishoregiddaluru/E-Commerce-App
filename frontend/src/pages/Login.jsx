@@ -145,7 +145,7 @@ const Login = () => {
 
           {/* Links */}
           <div className="flex justify-between text-[11px] text-gray-600 mb-5">
-            <p className="hover:text-indigo-600 cursor-pointer">
+            <p className="hover:text-indigo-600 cursor-pointer text-black">
               Forgot Password?
             </p>
 

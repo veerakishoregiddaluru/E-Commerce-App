@@ -27,7 +27,7 @@ const ShopContextProvider = (props) => {
     cartData[itemId][size] = (cartData[itemId][size] || 0) + 1;
 
     setCartItems(cartData);
-    console.log(token);
+    console.log("its a Token", token);
 
     if (token) {
       try {
@@ -52,6 +52,8 @@ const ShopContextProvider = (props) => {
         total += cartItems[items][item];
       }
     }
+    console.log("total cart items", total);
+
     return total;
   };
 
@@ -113,14 +115,34 @@ const ShopContextProvider = (props) => {
     }
   };
 
+  const getUserProfile = async () => {
+    try {
+      const res = await axios.get(backendUrl + "/api/user/profile", {
+        headers: { token },
+      });
+
+      if (res.data.success) {
+        return res.data.user;
+      } else {
+        toast.error(res.data.message);
+        return null;
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to load profile");
+      return null;
+    }
+  };
+
   useEffect(() => {
     getProductData();
   }, [products]);
 
   useEffect(() => {
-    if (!token && localStorage.getItem("token")) {
-      setToken(localStorage.getItem("token"));
-      getUserCart(localStorage.getItem("token"));
+    const savedToken = localStorage.getItem("token");
+
+    if (savedToken) {
+      setToken(savedToken);
+      getUserCart(savedToken);
     }
   }, []);
 
@@ -145,6 +167,7 @@ const ShopContextProvider = (props) => {
         setToken,
         setCartItems,
         getProductData,
+        getUserProfile,
       }}
     >
       {props.children}
