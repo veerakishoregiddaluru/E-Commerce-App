@@ -224,47 +224,33 @@ const verifyRazorpay = async (req, res) => {
    ADMIN & USER
 ========================= */
 const allOrders = async (req, res) => {
+  const orders = await orderModel.find({});
+  res.status(200).send({ success: true, orders });
+};
+
+// controllers/orderController.js
+const userOrders = async (req, res) => {
   try {
-    const ordersFromDB = await orderModel.find({}).lean();
+    if (!req.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
 
-    const safeOrders = ordersFromDB.map((order) => ({
-      ...order,
-
-      items: Array.isArray(order.items)
-        ? order.items.map((item) => ({
-            ...item,
-            image: Array.isArray(item.image) ? item.image : [],
-          }))
-        : [],
-
-      address: order.address || {
-        firstName: "Unknown",
-        lastName: "",
-        phone: "N/A",
-      },
-
-      status: order.status || "Order Placed",
-      payment: order.payment ?? false,
-      paymentMethod: order.paymentMethod || "COD",
-      amount: order.amount || 0,
-    }));
+    const orders = await orderModel.find({ userId: req.userId });
 
     res.status(200).json({
       success: true,
-      orders: safeOrders,
+      orders,
     });
   } catch (error) {
-    console.error("🔥 ADMIN ORDER LIST ERROR:", error);
+    console.error("USER ORDERS ERROR:", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch orders",
     });
   }
-};
-
-const userOrder = async (req, res) => {
-  const orders = await orderModel.find({ userId: req.userId });
-  res.status(200).send({ success: true, orders });
 };
 
 const updateStatus = async (req, res) => {
@@ -281,6 +267,6 @@ export {
   verifyStripe,
   verifyRazorpay,
   allOrders,
-  userOrder,
+  userOrders,
   updateStatus,
 };
