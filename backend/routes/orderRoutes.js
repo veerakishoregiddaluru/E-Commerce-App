@@ -4,7 +4,7 @@ import {
   placeOrderRazorpay,
   placeOrderStripe,
   allOrders,
-  userOrders,
+  userOrder,
   updateStatus,
   verifyStripe,
   verifyRazorpay,
@@ -31,5 +31,5 @@ orderRouter.post("/razorpay", authUser, placeOrderRazorpay);
 orderRouter.post("/verifyRazorpay", authUser, verifyRazorpay);
 // User Feature
 
-orderRouter.post("/userorders", authUser, userOrders);
+orderRouter.post("/userorders", authUser, userOrder);
 export default orderRouter;

@@ -37,35 +37,28 @@ console.log(enrichItemsWithImage);
 ========================= */
 const placeOrder = async (req, res) => {
   try {
-    const { items, amount, address } = req.body;
-    const userId = req.userId;
-
-    const enrichedItems = await enrichItemsWithImage(items);
-
-    const orderData = {
-      userId,
-      items: enrichedItems,
-      address,
-      amount,
-      paymentMethod: "COD",
-      payment: false,
+    const newOrder = new ordermodel({
+      userId: req.userId, // 🔥 THIS IS THE KEY LINE
+      items: req.body.items,
+      address: req.body.address,
+      amount: req.body.amount,
+      paymentMethod: req.body.paymentMethod,
+      payment: req.body.payment,
+      status: "Order Placed",
       date: Date.now(),
-    };
+    });
 
-    const newOrder = new orderModel(orderData);
     await newOrder.save();
 
-    await userModel.findByIdAndUpdate(userId, { cartData: {} });
-
-    res.status(200).send({
+    res.json({
       success: true,
-      message: "Order Placed",
+      message: "Order placed successfully",
     });
   } catch (error) {
-    console.error("Error in Placing order!", error);
-    res.status(500).send({
+    console.error("PLACE ORDER ERROR:", error);
+    res.status(500).json({
       success: false,
-      message: "Internal Server Error!",
+      message: "Failed to place order",
     });
   }
 };
@@ -228,17 +221,11 @@ const allOrders = async (req, res) => {
   res.status(200).send({ success: true, orders });
 };
 
-// controllers/orderController.js
-const userOrders = async (req, res) => {
+const userOrder = async (req, res) => {
   try {
-    if (!req.userId) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
-    const orders = await orderModel.find({ userId: req.userId });
+    const orders = await orderModel.find({
+      userId: req.userId,
+    });
 
     res.status(200).json({
       success: true,
@@ -267,6 +254,6 @@ export {
   verifyStripe,
   verifyRazorpay,
   allOrders,
-  userOrders,
+  userOrder,
   updateStatus,
 };
