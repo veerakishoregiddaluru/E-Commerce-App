@@ -109,6 +109,7 @@ const registerUser = async (req, res) => {
 };
 
 // ================= ADMIN LOGIN =================
+
 const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -117,9 +118,15 @@ const adminLogin = async (req, res) => {
       email === process.env.ADMIN_EMAIL &&
       password === process.env.ADMIN_PASSWORD
     ) {
-      const token = jwt.sign({ email }, process.env.JWT_SECRET, {
-        expiresIn: "1d",
-      });
+      // 🔥 include isAdmin flag
+      const token = jwt.sign(
+        {
+          email,
+          isAdmin: true, // ✅ REQUIRED
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "1d" },
+      );
 
       return res.status(200).json({
         success: true,
@@ -129,13 +136,13 @@ const adminLogin = async (req, res) => {
     }
 
     return res.status(401).json({
-      status: false,
+      success: false,
       message: "Invalid credentials",
     });
   } catch (error) {
     console.error("Admin login error", error);
     return res.status(500).json({
-      status: false,
+      success: false,
       message: "Internal server error",
     });
   }
