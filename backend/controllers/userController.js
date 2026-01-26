@@ -8,6 +8,8 @@ const createToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
 
+console.log("create Token", createToken());
+
 // ================= LOGIN USER =================
 const loginUser = async (req, res) => {
   try {

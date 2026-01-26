@@ -17,6 +17,7 @@ const PlaceOrder = (req, res) => {
     getCartAmount,
     delivery_fee,
     products,
+    getAuthHeader,
   } = useContext(ShopContext);
 
   const [formData, setFormData] = useState({
@@ -51,7 +52,7 @@ const PlaceOrder = (req, res) => {
           const { data } = await axios.post(
             backendUrl + "/api/order/verifyRazorpay",
             response,
-            { headers: { token } },
+            { headers: getAuthHeader() },
           );
 
           if (data.success) {
@@ -104,7 +105,7 @@ const PlaceOrder = (req, res) => {
             const response = await axios.post(
               backendUrl + "/api/order/place",
               orderData,
-              { headers: { token } },
+              { headers: getAuthHeader() },
             );
             console.log(response.data);
 
@@ -123,7 +124,7 @@ const PlaceOrder = (req, res) => {
             const responseStripe = await axios.post(
               backendUrl + "/api/order/stripe",
               orderData,
-              { headers: { token } },
+              { headers: getAuthHeader() },
             );
             if (responseStripe.data.success) {
               // toast.success("Order placed successfully");
@@ -141,7 +142,7 @@ const PlaceOrder = (req, res) => {
             const responseRazorpay = await axios.post(
               backendUrl + "/api/order/razorpay",
               orderData,
-              { headers: { token } },
+              { headers: getAuthHeader() },
             );
 
             if (responseRazorpay.data.success) {

@@ -18,6 +18,15 @@ const ShopContextProvider = (props) => {
 
   const navigate = useNavigate();
 
+  //==============================
+
+  const getAuthHeader = () => {
+    const storedToken = localStorage.getItem("token");
+    return storedToken ? { Authorization: `Bearer ${storedToken}` } : {};
+  };
+
+  //============================
+
   const addToCart = async (itemId, size) => {
     if (!size) return toast.error("Select Product Size!");
 
@@ -35,7 +44,7 @@ const ShopContextProvider = (props) => {
           backendUrl + "/api/cart/add",
           { itemId, size },
           {
-            headers: { token },
+            headers: getAuthHeader(),
           },
         );
       } catch (error) {
@@ -66,7 +75,7 @@ const ShopContextProvider = (props) => {
         await axios.post(
           backendUrl + "/api/cart/update",
           { itemId, size, quantity },
-          { headers: { token } },
+          { headers: getAuthHeader() },
         );
       } catch (error) {
         toast.error(error.response?.data?.message || "Internal Server Error");
@@ -105,7 +114,7 @@ const ShopContextProvider = (props) => {
       const response = await axios.post(
         backendUrl + "/api/cart/get",
         {},
-        { headers: { token } },
+        { headers: getAuthHeader() },
       );
       if (response.data.success) {
         setCartItems(response.data.cartData);
@@ -118,7 +127,7 @@ const ShopContextProvider = (props) => {
   const getUserProfile = async () => {
     try {
       const res = await axios.get(backendUrl + "/api/user/profile", {
-        headers: { token },
+        headers: getAuthHeader(),
       });
 
       if (res.data.success) {
@@ -135,14 +144,14 @@ const ShopContextProvider = (props) => {
 
   useEffect(() => {
     getProductData();
-  }, [products]);
+  }, []);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
 
     if (savedToken) {
       setToken(savedToken);
-      getUserCart(savedToken);
+      getUserCart(); // ✅ no param needed now
     }
   }, []);
 
@@ -168,6 +177,7 @@ const ShopContextProvider = (props) => {
         setCartItems,
         getProductData,
         getUserProfile,
+        getAuthHeader,
       }}
     >
       {props.children}

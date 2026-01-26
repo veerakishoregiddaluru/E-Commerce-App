@@ -37,20 +37,25 @@ console.log(enrichItemsWithImage);
 ========================= */
 const placeOrder = async (req, res) => {
   try {
-    const newOrder = new ordermodel({
-      userId: req.userId, // 🔥 THIS IS THE KEY LINE
+    const newOrder = new orderModel({
+      userId: req.userId, // comes from auth middleware
       items: req.body.items,
       address: req.body.address,
       amount: req.body.amount,
-      paymentMethod: req.body.paymentMethod,
-      payment: req.body.payment,
+      paymentMethod: "COD",
+      payment: false,
       status: "Order Placed",
       date: Date.now(),
     });
 
     await newOrder.save();
 
-    res.json({
+    // clear cart
+    await userModel.findByIdAndUpdate(req.userId, {
+      cartData: {},
+    });
+
+    res.status(200).json({
       success: true,
       message: "Order placed successfully",
     });

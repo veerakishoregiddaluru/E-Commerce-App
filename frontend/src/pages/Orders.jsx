@@ -7,15 +7,23 @@ import { toast } from "react-toastify";
 const Orders = () => {
   const { backendUrl, currency, token, navigate } = useContext(ShopContext);
   const [orderData, setOrderData] = useState([]);
-
   const loadOrderData = async () => {
     try {
-      if (!token) return;
+      const storedToken = localStorage.getItem("token");
+
+      if (!storedToken) {
+        navigate("/login");
+        return;
+      }
 
       const response = await axios.post(
         backendUrl + "/api/order/userorders",
         {},
-        { headers: { token } },
+        {
+          headers: {
+            Authorization: `Bearer ${storedToken}`, // ✅ REQUIRED
+          },
+        },
       );
 
       if (response.data.success) {
@@ -36,7 +44,7 @@ const Orders = () => {
         setOrderData(allOrderItem.reverse());
       }
     } catch (error) {
-      toast.error(error.message || "Failed to load orders");
+      toast.error(error.response?.data?.message || "Failed to load orders");
     }
   };
 

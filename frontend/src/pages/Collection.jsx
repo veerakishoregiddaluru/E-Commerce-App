@@ -172,7 +172,7 @@ const Collection = () => {
         </div>
       </div>
     </div>
-  );  
+  );
 };
 
 export default Collection;

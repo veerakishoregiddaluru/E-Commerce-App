@@ -21,7 +21,7 @@ productRouter.post(
     { name: "image3", maxCount: 1 },
     { name: "image4", maxCount: 1 },
   ]),
-  addProduct
+  addProduct,
 );
 productRouter.get(
   "/list",
@@ -31,7 +31,7 @@ productRouter.get(
     { name: "image3", maxCount: 1 },
     { name: "image4", maxCount: 1 },
   ]),
-  listProducts
+  listProducts,
 );
 productRouter.delete("/remove", adminAuth, removeProduct);
 productRouter.get("/single-product", sigleProduct);

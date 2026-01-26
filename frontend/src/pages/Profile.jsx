@@ -23,28 +23,35 @@ const Profile = () => {
     }
 
     const fetchProfileAndOrders = async () => {
-      const userData = await getUserProfile();
-      setUser(userData);
-
       try {
+        /* ✅ FETCH PROFILE */
+        const userData = await getUserProfile();
+        if (!userData) throw new Error("Profile not found");
+        setUser(userData);
+
+        /* ✅ FETCH ORDERS (FIXED HEADER) */
         const res = await axios.post(
           backendUrl + "/api/order/userorders",
           {},
-          { headers: { token } },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
         );
 
         if (res.data.success) {
-          setOrders(res.data.orders.reverse() || []);
+          setOrders(res.data.orders?.reverse() || []);
         }
       } catch (error) {
-        console.error("Failed to load orders");
+        console.error("Failed to load profile or orders", error);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     fetchProfileAndOrders();
-  }, [token]);
+  }, [token, backendUrl, navigate, getUserProfile]);
 
   const logoutHandler = () => {
     localStorage.removeItem("token");
@@ -113,14 +120,13 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* ================= ORDERS ================= */}
+        {/* ORDERS */}
         <div className="mt-12">
           <h3 className="text-lg font-semibold mb-5 text-gray-800">
             My Orders
           </h3>
 
           {orders.length === 0 ? (
-            /* 🔥 PREMIUM EMPTY STATE (ONLY CHANGED PART) */
             <div className="flex flex-col items-center justify-center py-14 text-center">
               <div className="mb-5 h-20 w-20 rounded-full bg-gradient-to-br from-gray-800 to-black flex items-center justify-center shadow-lg">
                 <svg

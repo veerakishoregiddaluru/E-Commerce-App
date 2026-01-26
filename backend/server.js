@@ -9,7 +9,7 @@ import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoutes.js";
 
 const app = express();
-
+const port = process.env.PORT || 4000;
 connectDB();
 connectCloudinary();
 
@@ -19,7 +19,7 @@ app.use(cors());
 app.get("/", (req, res) => {
   res.send("API working");
 });
-
+app.listen(port, () => console.log("Server Started on PORT: " + port));
 app.use("/api/user", userRouter);
 app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);

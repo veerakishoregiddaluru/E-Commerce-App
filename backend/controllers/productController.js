@@ -20,7 +20,7 @@ const addProduct = async (req, res) => {
     const image4 = req.files.image4 && req.files.image4[0];
 
     const images = [image1, image2, image3, image4].filter(
-      (item) => item !== undefined
+      (item) => item !== undefined,
     );
 
     let imageUrl = await Promise.all(
@@ -29,7 +29,7 @@ const addProduct = async (req, res) => {
           resource_type: "image",
         });
         return result.secure_url;
-      })
+      }),
     );
 
     console.log(
@@ -39,7 +39,7 @@ const addProduct = async (req, res) => {
       category,
       subCategory,
       sizes,
-      bestseller
+      bestseller,
     );
 
     console.log(imageUrl);
