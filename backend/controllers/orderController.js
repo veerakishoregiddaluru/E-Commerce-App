@@ -91,7 +91,7 @@ const placeOrderStripe = async (req, res) => {
 
     const line_items = items.map((item) => ({
       price_data: {
-        currency,
+        currency: "inr",
         product_data: { name: item.name },
         unit_amount: Math.round(item.price * 100),
       },
@@ -100,7 +100,7 @@ const placeOrderStripe = async (req, res) => {
 
     line_items.push({
       price_data: {
-        currency,
+        currency: "inr",
         product_data: { name: "Delivery Charges" },
         unit_amount: Math.round(deliveryCharge * 100),
       },
@@ -108,22 +108,24 @@ const placeOrderStripe = async (req, res) => {
     });
 
     const session = await stripe.checkout.sessions.create({
-      success_url: `${origin}/verify?success=true&orderId=${newOrder._id}`,
-      cancel_url: `${origin}/verify?success=false&orderId=${newOrder._id}`,
-      line_items,
+      payment_method_types: ["card"],
       mode: "payment",
+      client_reference_id: newOrder._id.toString(),
+      success_url: `${origin}/verify?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/cart`,
+      line_items,
     });
 
-    res.status(200).send({
+    // ✅ THIS WAS MISSING
+    res.status(200).json({
       success: true,
-      message: "Stripe Payment Session Created",
-      success_url: session.url,
+      url: session.url,
     });
   } catch (error) {
     console.error("Stripe Order Error:", error);
-    res.status(500).send({
+    res.status(500).json({
       success: false,
-      message: "Internal Server Error!",
+      message: "Stripe session creation failed",
     });
   }
 };
@@ -133,20 +135,45 @@ const placeOrderStripe = async (req, res) => {
 ========================= */
 const verifyStripe = async (req, res) => {
   try {
-    const { orderId, success } = req.body;
-    const userId = req.userId;
+    const { session_id } = req.body;
 
-    if (success === "true") {
-      await orderModel.findByIdAndUpdate(orderId, { payment: true });
-      await userModel.findByIdAndUpdate(userId, { cartData: {} });
+    console.log("Stripe session_id:", session_id);
 
-      res.status(200).send({ success: true, message: "Stripe Verified" });
-    } else {
-      await orderModel.findByIdAndDelete(orderId);
-      res.status(200).send({ success: false, message: "Stripe Not Verified!" });
+    if (!session_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Session ID missing",
+      });
     }
+
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+
+    console.log("Stripe session:", session.payment_status);
+
+    if (session.payment_status === "paid") {
+      const orderId = session.client_reference_id;
+
+      await orderModel.findByIdAndUpdate(orderId, {
+        payment: true,
+        status: "Order Placed",
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Stripe payment verified",
+      });
+    }
+
+    res.status(400).json({
+      success: false,
+      message: "Payment not completed",
+    });
   } catch (error) {
-    res.status(500).send({ success: false, message: "Internal Server Error!" });
+    console.error("Stripe verify error:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Stripe verification failed",
+    });
   }
 };
 

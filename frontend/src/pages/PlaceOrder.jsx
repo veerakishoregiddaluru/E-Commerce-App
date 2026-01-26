@@ -110,7 +110,7 @@ const PlaceOrder = (req, res) => {
             console.log(response.data);
 
             if (response.data.success) {
-              toast.success("Order placed successfully");
+              toast.success("Order placed successfully🎉");
               setCartItems({});
               navigate("/orders");
             } else {
@@ -130,8 +130,9 @@ const PlaceOrder = (req, res) => {
               // toast.success("Order placed successfully");
               // setCartItems({});
               // navigate("/orders");
-              const { success_url } = responseStripe.data;
-              window.location.replace(success_url);
+              // const { success_url } = responseStripe.data;
+              // window.location.replace(success_url);
+              window.location.href = responseStripe.data.url;
             } else {
               toast.error("Stripe session creation failed");
             }
