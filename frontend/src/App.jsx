@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom"; // ✅ MISSING IMPORT FIXED
+import { Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
 import Collection from "./pages/Collection";
@@ -13,24 +13,24 @@ import Orders from "./pages/Orders";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import SearchBar from "./components/SearchBar";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Profile from "./pages/Profile";
 import Verify from "./pages/Verify";
+import Welcome from "./pages/Welcome";
 
 const App = () => {
   return (
     <>
       <ToastContainer />
 
-      {/* Navbar stays full width */}
       <Navbar />
       <SearchBar />
 
-      {/* Page content only gets padding */}
       <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/welcome" element={<Welcome />} />
           <Route path="/collection" element={<Collection />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
@@ -44,7 +44,6 @@ const App = () => {
         </Routes>
       </div>
 
-      {/* Footer full width */}
       <Footer />
     </>
   );

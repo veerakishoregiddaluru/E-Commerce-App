@@ -42,6 +42,7 @@ const loginUser = async (req, res) => {
       status: true,
       message: "Login successful",
       token,
+      user,
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -98,6 +99,7 @@ const registerUser = async (req, res) => {
       status: true,
       message: "User registered successfully",
       token,
+      user,
     });
   } catch (error) {
     console.error("Register error:", error);

@@ -27,6 +27,7 @@ const Verify = () => {
         if (data.success) {
           toast.success("Payment Successfull🎉");
           setCartItems({});
+          localStorage.removeItem("cartItems");
           navigate("/orders");
         } else {
           toast.error("Stripe verification failed");

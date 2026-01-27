@@ -8,7 +8,6 @@ const Login = () => {
   const [currentState, setCurrentState] = useState("Login");
 
   const [showPassword, setShowPassword] = useState(false);
-
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [email, setMail] = useState("");
@@ -17,32 +16,34 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      if (currentState === "Sign Up") {
-        const response = await axios.post(backendUrl + "/api/user/register", {
-          name,
-          email,
-          password,
-        });
+      const url =
+        currentState === "Sign Up"
+          ? backendUrl + "/api/user/register"
+          : backendUrl + "/api/user/login";
 
-        if (response.data.status) {
-          toast.success(response.data.message);
-          setToken(response.data.token);
-          localStorage.setItem("token", response.data.token);
-        }
-      } else {
-        const response = await axios.post(backendUrl + "/api/user/login", {
-          email,
-          password,
-        });
+      const payload =
+        currentState === "Sign Up"
+          ? { name, email, password }
+          : { email, password };
 
-        if (response.data.status) {
-          toast.success(response.data.message);
-          setToken(response.data.token);
-          localStorage.setItem("token", response.data.token);
+      const response = await axios.post(url, payload);
+
+      if (response.data.status) {
+        toast.success(response.data.message);
+
+        setToken(response.data.token);
+        localStorage.setItem("token", response.data.token);
+
+        // safe userId storage
+        if (response.data.user?._id) {
+          localStorage.setItem("userId", response.data.user._id);
         }
+
+        // ✅ ALWAYS GO TO WELCOME AFTER LOGIN
+        navigate("/welcome", { replace: true });
       }
     } catch (error) {
-      if (error.response && error.response.data?.message) {
+      if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else {
         toast.error("Something went wrong. Please try again.");
@@ -52,7 +53,7 @@ const Login = () => {
 
   useEffect(() => {
     if (token) {
-      navigate("/");
+      navigate("/welcome", { replace: true });
     }
   }, [token, navigate]);
 
@@ -74,90 +75,42 @@ const Login = () => {
           </div>
 
           {currentState === "Sign Up" && (
-            <div className="relative mb-4">
-              <input
-                onChange={(e) => setName(e.target.value)}
-                value={name}
-                type="text"
-                required
-                className="peer w-full px-3 pt-4 pb-2 rounded-lg border border-gray-300
-                focus:border-indigo-500 focus:ring-1 focus:ring-indigo-200 outline-none"
-              />
-              <label
-                className="absolute left-3 top-3 text-gray-400 text-xs transition-all
-              peer-focus:text-[10px] peer-focus:-top-1 peer-valid:text-[10px] peer-valid:-top-1"
-              >
-                Full Name
-              </label>
-            </div>
+            <input
+              className="mb-4 w-full px-3 py-2 border rounded"
+              placeholder="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
           )}
 
-          <div className="relative mb-4">
-            <input
-              onChange={(e) => setMail(e.target.value)}
-              value={email}
-              type="email"
-              required
-              className="peer w-full px-3 pt-4 pb-2 rounded-lg border border-gray-300
-              focus:border-purple-500 focus:ring-1 focus:ring-purple-200 outline-none"
-            />
-            <label
-              className="absolute left-3 top-3 text-gray-400 text-xs transition-all
-            peer-focus:text-[10px] peer-focus:-top-1 peer-valid:text-[10px] peer-valid:-top-1"
-            >
-              Email Address
-            </label>
-          </div>
+          <input
+            className="mb-4 w-full px-3 py-2 border rounded"
+            placeholder="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setMail(e.target.value)}
+          />
 
-          <div className="relative mb-4">
-            <input
-              onChange={(e) => setPassword(e.target.value)}
-              value={password}
-              type={showPassword ? "text" : "password"}
-              required
-              className="peer w-full px-3 pt-4 pb-2 pr-10
-    rounded-lg border border-gray-300
-    focus:border-pink-500 focus:ring-1 focus:ring-pink-200
-    outline-none transition"
-            />
+          <input
+            className="mb-4 w-full px-3 py-2 border rounded"
+            placeholder="Password"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-            <label
-              className="absolute left-3 top-3 text-gray-400 text-xs transition-all
-    peer-focus:text-[10px] peer-focus:-top-1 peer-valid:text-[10px] peer-valid:-top-1"
-            >
-              Password
-            </label>
-
-            {/* 👁 Show / Hide Icon */}
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2
-    text-gray-500 hover:text-pink-600 transition"
-            >
-              {showPassword ? "🙈" : "👁️"}
-            </button>
-          </div>
-
-          <div className="flex justify-between text-[11px] mb-5">
-            <span className="cursor-pointer text-black">Forgot Password?</span>
-            <span
-              onClick={() =>
-                setCurrentState(currentState === "Login" ? "Sign Up" : "Login")
-              }
-              className="cursor-pointer font-semibold text-purple-600"
-            >
-              {currentState === "Login" ? "Create Account" : "Login Here"}
-            </span>
-          </div>
-
-          <button
-            className="w-full py-2.5 rounded-lg text-white font-semibold
-          bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600
-          hover:scale-[1.02] transition"
-          >
+          <button className="w-full py-2 bg-black text-white rounded">
             {currentState === "Login" ? "Sign In" : "Sign Up"}
           </button>
+
+          <p
+            onClick={() =>
+              setCurrentState(currentState === "Login" ? "Sign Up" : "Login")
+            }
+            className="mt-4 text-center text-sm cursor-pointer"
+          >
+            {currentState === "Login" ? "Create Account" : "Login Here"}
+          </p>
         </form>
       </div>
     </div>
