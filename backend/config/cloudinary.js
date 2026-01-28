@@ -7,10 +7,12 @@ const connectCloudinary = async () => {
     api_secret: process.env.CLOUDINARY_SECRET_KEY,
   });
 };
+
 console.log(
   "Cloud:",
   process.env.CLOUDINARY_NAME,
   "Key:",
-  process.env.CLOUDINARY_API_KEY
+  process.env.CLOUDINARY_API_KEY,
 );
+
 export default connectCloudinary;
