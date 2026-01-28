@@ -11,9 +11,22 @@ const Login = () => {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [email, setMail] = useState("");
+  const [phone, setPhone] = useState(""); // ✅ NEW
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+
+    // ✅ Frontend validation for Sign Up
+    if (currentState === "Sign Up") {
+      if (!name || !email || !password || !phone) {
+        return toast.error("All fields are required");
+      }
+
+      const cleanPhone = phone.replace(/\D/g, "");
+      if (cleanPhone.length !== 10) {
+        return toast.error("Enter a valid 10-digit phone number");
+      }
+    }
 
     try {
       const url =
@@ -23,7 +36,12 @@ const Login = () => {
 
       const payload =
         currentState === "Sign Up"
-          ? { name, email, password }
+          ? {
+              name,
+              email,
+              password,
+              phone: phone.replace(/\D/g, ""), // ✅ send phone
+            }
           : { email, password };
 
       const response = await axios.post(url, payload);
@@ -34,12 +52,10 @@ const Login = () => {
         setToken(response.data.token);
         localStorage.setItem("token", response.data.token);
 
-        // safe userId storage
         if (response.data.user?._id) {
           localStorage.setItem("userId", response.data.user._id);
         }
 
-        // ✅ ALWAYS GO TO WELCOME AFTER LOGIN
         navigate("/welcome", { replace: true });
       }
     } catch (error) {
@@ -75,12 +91,23 @@ const Login = () => {
           </div>
 
           {currentState === "Sign Up" && (
-            <input
-              className="mb-4 w-full px-3 py-2 border rounded"
-              placeholder="Full Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+            <>
+              <input
+                className="mb-4 w-full px-3 py-2 border rounded"
+                placeholder="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+
+              {/* ✅ PHONE INPUT */}
+              <input
+                className="mb-4 w-full px-3 py-2 border rounded"
+                placeholder="Phone Number"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </>
           )}
 
           <input

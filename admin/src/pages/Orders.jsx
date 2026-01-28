@@ -3,23 +3,23 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { assets } from "../assets/assets";
 
-// ✅ SAFE: read directly from env
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 const currency = "$";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
 
-  // 🔑 Safe token getter
+  // ✅ MUST use adminToken
   const getAuthHeader = () => {
-    const token = localStorage.getItem("token");
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    const adminToken = localStorage.getItem("adminToken");
+    return adminToken ? { Authorization: `Bearer ${adminToken}` } : {};
   };
 
+  // ================= FETCH ALL ORDERS =================
   const fetchAllOrders = async () => {
     try {
       const response = await axios.post(
-        backendUrl + "/api/order/all",
+        backendUrl + "/api/order/all", // ✅ POST (matches backend)
         {},
         {
           headers: getAuthHeader(),
@@ -32,11 +32,12 @@ const Orders = () => {
         toast.error(response.data.message || "No orders found");
       }
     } catch (error) {
-      console.error("FETCH ORDERS ERROR:", error);
+      console.error("FETCH ORDERS ERROR:", error.response?.data || error);
       toast.error("Failed to fetch orders");
     }
   };
 
+  // ================= UPDATE ORDER STATUS =================
   const statusHandler = async (e, orderId) => {
     try {
       const response = await axios.post(
@@ -45,7 +46,9 @@ const Orders = () => {
           orderId,
           status: e.target.value,
         },
-        { headers: getAuthHeader() },
+        {
+          headers: getAuthHeader(),
+        },
       );
 
       if (response.data.success) {
@@ -55,7 +58,7 @@ const Orders = () => {
         toast.error(response.data.message);
       }
     } catch (error) {
-      console.error("STATUS UPDATE ERROR:", error);
+      console.error("STATUS UPDATE ERROR:", error.response?.data || error);
       toast.error("Failed to update status");
     }
   };
@@ -75,6 +78,7 @@ const Orders = () => {
           key={order._id}
           className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 mb-5 shadow-sm hover:shadow-md transition flex flex-col gap-4 text-sm"
         >
+          {/* ITEMS */}
           <div className="flex items-start gap-4">
             <div className="flex gap-2">
               {order.items.map((item, idx) => (
@@ -106,6 +110,7 @@ const Orders = () => {
             </div>
           </div>
 
+          {/* CUSTOMER */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <p className="font-semibold text-slate-800">
               👤 {order.address.firstName} {order.address.lastName}
@@ -113,6 +118,7 @@ const Orders = () => {
             <p className="text-slate-500">📞 {order.address.phone}</p>
           </div>
 
+          {/* PAYMENT */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-lg font-bold text-emerald-600">
               {currency}
@@ -136,6 +142,7 @@ const Orders = () => {
             </div>
           </div>
 
+          {/* STATUS */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <label className="text-xs font-semibold text-slate-500">
               Order Status

@@ -1,8 +1,12 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
-import productModel from "../models/productModel.js"; // ✅ REQUIRED
+import productModel from "../models/productModel.js";
 import Stripe from "stripe";
 import Razorpay from "razorpay";
+import {
+  sendOrderSuccessWhatsApp,
+  sendOrderStatusWhatsApp,
+} from "../utils/sendWhatsApp.js";
 
 // ================= CONFIG =================
 const currency = "inr";
@@ -15,30 +19,29 @@ const razorpayInstance = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+// ================= HELPER =================
 const enrichItemsWithImage = async (items) => {
   return await Promise.all(
     items.map(async (item) => {
-      const product = await productModel.findOne({
-        name: item.name, // fallback
-      });
-
+      const product = await productModel.findOne({ name: item.name });
       return {
         ...item,
-        productId: product?._id, // ✅ attach it now
+        productId: product?._id,
         image: product?.image || [],
       };
     }),
   );
 };
-console.log(enrichItemsWithImage);
 
 /* =========================
    PLACE ORDER (COD)
 ========================= */
 const placeOrder = async (req, res) => {
   try {
+    const user = await userModel.findById(req.userId);
+
     const newOrder = new orderModel({
-      userId: req.userId, // comes from auth middleware
+      userId: req.userId,
       items: req.body.items,
       address: req.body.address,
       amount: req.body.amount,
@@ -50,9 +53,15 @@ const placeOrder = async (req, res) => {
 
     await newOrder.save();
 
-    // clear cart
-    await userModel.findByIdAndUpdate(req.userId, {
-      cartData: {},
+    await userModel.findByIdAndUpdate(req.userId, { cartData: {} });
+
+    // ✅ WhatsApp Message
+    sendOrderSuccessWhatsApp({
+      userPhone: user.phone,
+      userName: user.name,
+      orderId: newOrder._id,
+      amount: newOrder.amount,
+      paymentMethod: "Cash on Delivery",
     });
 
     res.status(200).json({
@@ -116,7 +125,6 @@ const placeOrderStripe = async (req, res) => {
       line_items,
     });
 
-    // ✅ THIS WAS MISSING
     res.status(200).json({
       success: true,
       url: session.url,
@@ -137,8 +145,6 @@ const verifyStripe = async (req, res) => {
   try {
     const { session_id } = req.body;
 
-    console.log("Stripe session_id:", session_id);
-
     if (!session_id) {
       return res.status(400).json({
         success: false,
@@ -148,14 +154,24 @@ const verifyStripe = async (req, res) => {
 
     const session = await stripe.checkout.sessions.retrieve(session_id);
 
-    console.log("Stripe session:", session.payment_status);
-
     if (session.payment_status === "paid") {
       const orderId = session.client_reference_id;
 
-      await orderModel.findByIdAndUpdate(orderId, {
-        payment: true,
-        status: "Order Placed",
+      const order = await orderModel.findByIdAndUpdate(
+        orderId,
+        { payment: true, status: "Order Placed" },
+        { new: true },
+      );
+
+      const user = await userModel.findById(order.userId);
+
+      // ✅ WhatsApp Message
+      sendOrderSuccessWhatsApp({
+        userPhone: user.phone,
+        userName: user.name,
+        orderId: order._id,
+        amount: order.amount,
+        paymentMethod: "Stripe",
       });
 
       return res.status(200).json({
@@ -225,17 +241,38 @@ const placeOrderRazorpay = async (req, res) => {
 const verifyRazorpay = async (req, res) => {
   try {
     const { razorpay_order_id } = req.body;
-    const userId = req.userId;
 
     const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id);
 
     if (orderInfo.status === "paid") {
-      await orderModel.findByIdAndUpdate(orderInfo.receipt, { payment: true });
-      await userModel.findByIdAndUpdate(userId, { cartData: {} });
+      const order = await orderModel.findByIdAndUpdate(
+        orderInfo.receipt,
+        { payment: true, status: "Order Placed" },
+        { new: true },
+      );
 
-      res.status(200).send({ success: true, message: "Payment Successful" });
+      const user = await userModel.findById(order.userId);
+
+      await userModel.findByIdAndUpdate(order.userId, { cartData: {} });
+
+      // ✅ WhatsApp Message
+      sendOrderSuccessWhatsApp({
+        userPhone: user.phone,
+        userName: user.name,
+        orderId: order._id,
+        amount: order.amount,
+        paymentMethod: "Razorpay",
+      });
+
+      res.status(200).send({
+        success: true,
+        message: "Payment Successful",
+      });
     } else {
-      res.status(400).send({ success: false, message: "Payment Failed!" });
+      res.status(400).send({
+        success: false,
+        message: "Payment Failed!",
+      });
     }
   } catch (error) {
     res.status(500).send({
@@ -253,7 +290,6 @@ const allOrders = async (req, res) => {
     const orders = await orderModel.find({});
     res.status(200).send({ success: true, orders });
   } catch (error) {
-    console.error("ADMIN ORDERS ERROR:", error);
     res.status(500).send({
       success: false,
       message: "Failed to fetch orders",
@@ -263,16 +299,9 @@ const allOrders = async (req, res) => {
 
 const userOrder = async (req, res) => {
   try {
-    const orders = await orderModel.find({
-      userId: req.userId,
-    });
-
-    res.status(200).json({
-      success: true,
-      orders,
-    });
+    const orders = await orderModel.find({ userId: req.userId });
+    res.status(200).json({ success: true, orders });
   } catch (error) {
-    console.error("USER ORDERS ERROR:", error);
     res.status(500).json({
       success: false,
       message: "Failed to fetch orders",
@@ -281,10 +310,51 @@ const userOrder = async (req, res) => {
 };
 
 const updateStatus = async (req, res) => {
-  await orderModel.findByIdAndUpdate(req.body.orderId, {
-    status: req.body.status,
-  });
-  res.status(200).send({ success: true, message: "Status Updated" });
+  try {
+    const { orderId, status } = req.body;
+
+    // 1️⃣ Update order status
+    const order = await orderModel.findByIdAndUpdate(
+      orderId,
+      { status },
+      { new: true },
+    );
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    // 2️⃣ Send WhatsApp safely (must NOT break status update)
+    try {
+      const user = await userModel.findById(order.userId);
+
+      if (user?.phone) {
+        await sendOrderStatusWhatsApp({
+          phone: user.phone,
+          name: user.name,
+          orderId: order._id,
+          status,
+        });
+      }
+    } catch (whatsAppError) {
+      console.error("⚠️ WhatsApp failed (ignored):", whatsAppError.message);
+    }
+
+    // 3️⃣ Always succeed if DB update worked
+    return res.status(200).json({
+      success: true,
+      message: "Order status updated successfully",
+    });
+  } catch (error) {
+    console.error("UPDATE STATUS ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update order status",
+    });
+  }
 };
 
 export {

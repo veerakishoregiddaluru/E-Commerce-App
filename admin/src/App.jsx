@@ -10,32 +10,41 @@ import Login from "./components/Login";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export const bakendUrl = import.meta.env.VITE_BACKEND_URL;
+export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 export const currency = "$";
 
 export default function App() {
-  const [token, setToken] = useState(
-    localStorage.getItem("token") ? localStorage.getItem("token") : "",
+  // ✅ USE adminToken (NOT user token)
+  const [adminToken, setAdminToken] = useState(
+    localStorage.getItem("adminToken") || "",
   );
 
+  // Keep adminToken in sync
   useEffect(() => {
-    localStorage.setItem("token", token);
-  });
+    if (adminToken) {
+      localStorage.setItem("adminToken", adminToken);
+    } else {
+      localStorage.removeItem("adminToken");
+    }
+  }, [adminToken]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <ToastContainer />
-      {token === "" ? (
-        <Login setToken={setToken} />
+
+      {/* ✅ ADMIN AUTH CHECK */}
+      {adminToken === "" ? (
+        <Login setToken={setAdminToken} /> // Admin login
       ) : (
         <>
-          <Navbar setToken={setToken} />
+          <Navbar setToken={setAdminToken} />
           <div className="flex">
             <Sidebar />
             <div className="ml-6 mt-8 w-full">
               <Routes>
-                <Route path="/add" element={<Add token={token} />} />
-                <Route path="/list" element={<List token={token} />} />
-                <Route path="/orders" element={<Orders token={token} />} />
+                <Route path="/add" element={<Add />} />
+                <Route path="/list" element={<List />} />
+                <Route path="/orders" element={<Orders />} />
               </Routes>
             </div>
           </div>

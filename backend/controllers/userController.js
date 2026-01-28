@@ -56,9 +56,17 @@ const loginUser = async (req, res) => {
 // ================= REGISTER USER =================
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone } = req.body;
 
-    //  User already exists
+    // ✅ Check required fields
+    if (!name || !email || !password || !phone) {
+      return res.status(400).json({
+        status: false,
+        message: "All fields are required",
+      });
+    }
+
+    // ✅ User already exists
     const existUser = await userModel.findOne({ email });
     if (existUser) {
       return res.status(409).json({
@@ -67,7 +75,7 @@ const registerUser = async (req, res) => {
       });
     }
 
-    //  Invalid email
+    // ✅ Validate email
     if (!validator.isEmail(email)) {
       return res.status(400).json({
         status: false,
@@ -75,7 +83,16 @@ const registerUser = async (req, res) => {
       });
     }
 
-    //  Weak password
+    // ✅ Validate phone (India – 10 digits)
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (cleanPhone.length !== 10) {
+      return res.status(400).json({
+        status: false,
+        message: "Please enter a valid 10-digit phone number",
+      });
+    }
+
+    // ✅ Weak password check
     if (password.length < 8) {
       return res.status(400).json({
         status: false,
@@ -83,13 +100,15 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // ✅ Hash password (FIXED bcrypt usage)
+    // ✅ Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // ✅ Create user WITH phone
     const user = await userModel.create({
       name,
       email,
+      phone: cleanPhone,
       password: hashedPassword,
     });
 

@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { bakendUrl, currency } from "../App";
+import { backendUrl, currency } from "../App";
 
 const List = ({ token }) => {
   const [list, setList] = useState([]);
 
   const fetchList = async () => {
     try {
-      const response = await axios.get(bakendUrl + "/api/product/list");
+      const response = await axios.get(backendUrl + "/api/product/list");
 
       if (response.data.success) {
         toast.success("Products Loaded Successfully!");
@@ -24,7 +24,7 @@ const List = ({ token }) => {
   const removeProduct = async (id) => {
     try {
       const response = await axios.delete(
-        `${bakendUrl}/api/product/remove?id=${id}`,
+        `${backendUrl}/api/product/remove?id=${id}`,
         { headers: { token } },
       );
 

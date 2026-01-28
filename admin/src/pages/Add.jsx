@@ -1,5 +1,5 @@
 import { assets } from "../assets/assets";
-import { bakendUrl } from "../App";
+import { backendUrl } from "../App";
 
 import { useState } from "react";
 import axios from "axios";
@@ -36,7 +36,7 @@ const Add = ({ token }) => {
       image4 && formData.append("image4", image4);
 
       const response = await axios.post(
-        bakendUrl + "/api/product/add",
+        backendUrl + "/api/product/add",
         formData,
         { headers: { token } },
       );
