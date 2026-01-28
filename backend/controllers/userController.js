@@ -4,11 +4,14 @@ import jwt from "jsonwebtoken";
 import validator from "validator";
 
 // ================= CREATE TOKEN =================
-const createToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-};
 
-console.log("create Token", createToken());
+const createToken = (userId) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET missing");
+  }
+
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
+};
 
 // ================= LOGIN USER =================
 const loginUser = async (req, res) => {
