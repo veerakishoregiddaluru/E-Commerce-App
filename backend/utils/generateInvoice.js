@@ -2,34 +2,23 @@ import PDFDocument from "pdfkit";
 import path from "path";
 import fs from "fs";
 
-/* ================= BRAND COLORS (FROM YOUR LOGO) ================= */
+/* ================= COLORS ================= */
 const COLORS = {
-  pink: "#FF2D6F",
-  blue: "#00AEEF",
-  green: "#7AC943",
-  purple: "#8E44AD",
-  yellow: "#FFD200",
+  purple: "#6E026F",
+  accent: "#161E54",
   dark: "#1F2937",
   gray: "#6B7280",
+  light: "#F5F5F7",
 };
 
-/* ================= CLEAN NUMBER ================= */
 const cleanNumber = (value) => {
   if (!value) return 0;
-  return (
-    Number(
-      value
-        .toString()
-        .replace(/['’"]/g, "")
-        .replace(/[^\d.]/g, ""),
-    ) || 0
-  );
+  return Number(value.toString().replace(/[^\d.]/g, "")) || 0;
 };
 
 const generateInvoice = (order, res) => {
-  const doc = new PDFDocument({ size: "A4", margin: 50 });
+  const doc = new PDFDocument({ size: "A4", margin: 0 });
 
-  /* ================= RESPONSE HEADERS ================= */
   res.setHeader("Content-Type", "application/pdf");
   res.setHeader(
     "Content-Disposition",
@@ -38,112 +27,110 @@ const generateInvoice = (order, res) => {
 
   doc.pipe(res);
 
-  /* ================= HEADER BAR ================= */
-  doc.rect(0, 0, 612, 120).fill(COLORS.purple);
+  /* ================= BACKGROUND ================= */
+  doc.rect(0, 0, 612, 792).fill("white");
 
-  /* ================= LOGO ================= */
+  /* ================= HEADER ================= */
+  doc.rect(0, 0, 612, 150).fill(COLORS.purple);
+
+  // logo image
   const logoPath = path.resolve("backend/assets/kishore_trends1.png");
-
   if (fs.existsSync(logoPath)) {
-    doc.image(logoPath, 45, 30, { width: 90 });
+    doc.image(logoPath, 50, 40, { width: 70 });
   }
 
-  /* ================= BRAND TEXT ================= */
   doc
     .fillColor("white")
     .font("Helvetica-Bold")
-    .fontSize(24)
-    .text("Kishore Trends", 150, 40);
+    .fontSize(28)
+    .text("KISHORE TRENDS", 140, 45);
 
   doc
     .font("Helvetica")
-    .fontSize(11)
-    .text("Fashion for Every Generation", 150, 72);
+    .fontSize(12)
+    .text("Fashion for Every Generation", 140, 78);
 
-  /* ================= SAFE DATE ================= */
-  const invoiceDate = order.createdAt || order.date || Date.now();
+  doc.fontSize(18).font("Helvetica-Bold").text("INVOICE", 450, 60);
 
-  /* ================= INVOICE META ================= */
+  /* ================= WHITE CARD ================= */
+  doc.roundedRect(40, 170, 532, 560, 12).fill(COLORS.light);
+
+  /* ================= BILLING ================= */
+  const invoiceDate = order.createdAt || Date.now();
+
+  doc
+    .fillColor(COLORS.dark)
+    .fontSize(12)
+    .font("Helvetica-Bold")
+    .text("Billing To:", 60, 200);
+
+  doc
+    .font("Helvetica")
+    .fontSize(10)
+    .fillColor(COLORS.gray)
+    .text(order.address?.email || "-", 60, 220)
+    .text(order.address?.phone || "-", 60, 235)
+    .text(order.address?.street || "-", 60, 250);
+
   doc
     .fillColor(COLORS.dark)
     .fontSize(10)
-    .text(`Invoice ID: ${order._id}`, 50, 140)
-    .text(`Date: ${new Date(invoiceDate).toDateString()}`, 50, 155);
-
-  /* ================= BILL TO ================= */
-  doc
-    .fontSize(13)
-    .font("Helvetica-Bold")
-    .fillColor(COLORS.purple)
-    .text("Billed To", 50, 185);
-
-  doc
-    .fontSize(10)
-    .font("Helvetica")
-    .fillColor(COLORS.gray)
-    .text(order.address?.email || "-", 50, 205)
-    .text(order.address?.phone || "-", 50, 220)
-    .text(order.address?.street || "-", 50, 235);
+    .text(`Invoice ID: ${order._id}`, 380, 220)
+    .text(`Date: ${new Date(invoiceDate).toDateString()}`, 380, 235);
 
   /* ================= TABLE HEADER ================= */
-  const tableTop = 280;
+  const tableTop = 300;
+
+  doc.roundedRect(60, tableTop, 492, 30, 8).fill(COLORS.dark);
 
   doc
-    .fillColor(COLORS.dark)
-    .fontSize(11)
+    .fillColor("white")
     .font("Helvetica-Bold")
-    .text("Product", 50, tableTop)
-    .text("Qty", 310, tableTop)
-    .text("Price", 380, tableTop)
-    .text("Total", 470, tableTop);
-
-  doc
-    .moveTo(50, tableTop + 16)
-    .lineTo(560, tableTop + 16)
-    .strokeColor(COLORS.blue)
-    .lineWidth(2)
-    .stroke();
+    .fontSize(11)
+    .text("Product", 70, tableTop + 8)
+    .text("Qty", 310, tableTop + 8)
+    .text("Price", 370, tableTop + 8)
+    .text("Total", 460, tableTop + 8);
 
   /* ================= TABLE BODY ================= */
-  let y = tableTop + 32;
+  let y = tableTop + 45;
   let grandTotal = 0;
 
   order.items.forEach((item) => {
     const price = cleanNumber(item.price);
     const qty = cleanNumber(item.quantity);
     const total = price * qty;
-
     grandTotal += total;
 
     doc
-      .fontSize(10)
-      .font("Helvetica")
       .fillColor(COLORS.dark)
-      .text(item.name, 50, y, { width: 240 })
+      .font("Helvetica")
+      .fontSize(10)
+      .text(item.name, 70, y, { width: 200 })
       .text(qty.toString(), 310, y)
-      .text(`₹${price}`, 380, y)
-      .text(`₹${total}`, 470, y);
+      .text(`₹${price}`, 370, y)
+      .text(`₹${total}`, 460, y);
 
-    y += 22;
+    y += 24;
   });
 
-  /* ================= GRAND TOTAL ================= */
-  doc.rect(350, y + 15, 210, 40).fill(COLORS.green);
+  /* ================= TOTAL BOX ================= */
+  doc.roundedRect(350, y + 20, 200, 45, 8).fill(COLORS.accent);
 
   doc
-    .fillColor("#25343F")
-    .fontSize(13)
+    .fillColor("white")
     .font("Helvetica-Bold")
-    .text("Grand Total", 365, y + 28)
-    .text(`₹${grandTotal}`, 470, y + 28);
+    .fontSize(13)
+    .text("Grand Total", 365, y + 35)
+    .text(`₹${grandTotal}`, 460, y + 35);
 
   /* ================= FOOTER ================= */
   doc
     .fillColor(COLORS.gray)
     .fontSize(9)
-    .font("Helvetica")
-    .text("Thank you for shopping with Kishore Trends 💖", 50, 760, {
+    .text("Thank you for shopping with Kishore Trends 💖", 60, 710, {
       align: "center",
+      width: 492,
     });
 
   doc.end();
