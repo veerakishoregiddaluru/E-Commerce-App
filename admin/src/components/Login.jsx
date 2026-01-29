@@ -36,7 +36,7 @@ const Login = ({ setToken }) => {
         {`
           @keyframes zoomInOut {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.4); }
+            50% { transform: scale(1.15); }
           }
           .zoom-animate {
             animation: zoomInOut 3s ease-in-out infinite;
@@ -46,15 +46,18 @@ const Login = ({ setToken }) => {
 
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 px-4">
         <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
-          {/* LEFT BRANDING – DESKTOP ONLY */}
+          {/* LEFT BRANDING – DESKTOP */}
           <div className="hidden md:flex flex-col items-center justify-center bg-slate-900 text-white p-8">
             <div className="relative mb-6">
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-20 h-14 border-4 border-white rounded-t-full"></div>
-              <div className="w-36 h-36 bg-white rounded-2xl flex items-center justify-center shadow-xl">
+              {/* BAG HANDLE */}
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-24 h-16 border-4 border-white rounded-t-full"></div>
+
+              {/* BAG BODY */}
+              <div className="w-40 h-40 bg-white rounded-2xl flex items-center justify-center shadow-xl">
                 <img
                   src={assets.kishore_trends1}
                   alt="Kishore Trends Logo"
-                  className="w-24 h-24 object-contain zoom-animate"
+                  className="w-28 h-28 object-contain zoom-animate"
                 />
               </div>
             </div>
@@ -66,25 +69,30 @@ const Login = ({ setToken }) => {
             </p>
           </div>
 
-          {/* RIGHT SIDE – LOGIN FORM */}
+          {/* RIGHT SIDE – LOGIN */}
           <div className="p-8 sm:p-10 flex flex-col justify-center">
-            {/* MOBILE LOGO */}
-            <div className="md:hidden flex flex-col items-center mb-6">
-              <div className="relative mb-3">
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-14 h-10 border-4 border-white rounded-t-full"></div>
-                <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+            {/* MOBILE BAG LOGO */}
+            <div className="md:hidden flex flex-col items-center mb-8">
+              <div className="relative mb-4">
+                {/* BAG HANDLE */}
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-20 h-12 border-4 border-black rounded-t-full"></div>
+
+                {/* BAG BODY */}
+                <div className="w-32 h-32 bg-black rounded-2xl flex items-center justify-center shadow-xl">
                   <img
                     src={assets.kishore_trends1}
                     alt="Kishore Trends Logo"
-                    className="w-16 h-16 object-contain zoom-animate"
+                    className="w-20 h-20 object-contain zoom-animate"
                   />
                 </div>
               </div>
-              <h2 className="text-lg font-bold text-slate-800">
+
+              <h2 className="text-xl font-bold text-slate-800">
                 Kishore Trends
               </h2>
-              <p className="text-xs text-slate-500 text-center">
-                Secure Admin Panel
+              <p className="text-sm text-slate-500 text-center mt-1">
+                Secure Admin Panel <br />
+                Fashion for Every Generation
               </p>
             </div>
 
