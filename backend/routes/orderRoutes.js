@@ -8,6 +8,7 @@ import {
   updateStatus,
   verifyStripe,
   verifyRazorpay,
+  downloadInvoice,
 } from "../controllers/orderController.js";
 import adminAuth from "../middleWares/adminAuth.js";
 import authUser from "../middleWares/auth.js";
@@ -32,4 +33,7 @@ orderRouter.post("/verifyRazorpay", authUser, verifyRazorpay);
 // User Feature
 
 orderRouter.post("/userorders", authUser, userOrder);
+
+orderRouter.get("/invoice/:orderId", authUser, downloadInvoice);
+
 export default orderRouter;

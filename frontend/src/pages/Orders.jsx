@@ -6,7 +6,10 @@ import { toast } from "react-toastify";
 
 const Orders = () => {
   const { backendUrl, currency, token, navigate } = useContext(ShopContext);
+
   const [orderData, setOrderData] = useState([]);
+
+  // ================= LOAD ORDERS =================
   const loadOrderData = async () => {
     try {
       const storedToken = localStorage.getItem("token");
@@ -21,7 +24,7 @@ const Orders = () => {
         {},
         {
           headers: {
-            Authorization: `Bearer ${storedToken}`, // ✅ REQUIRED
+            Authorization: `Bearer ${storedToken}`,
           },
         },
       );
@@ -33,6 +36,7 @@ const Orders = () => {
           order.items.forEach((item) => {
             allOrderItem.push({
               ...item,
+              orderId: order._id,
               status: order.status,
               payment: order.payment,
               paymentMethod: order.paymentMethod,
@@ -48,13 +52,27 @@ const Orders = () => {
     }
   };
 
+  // ================= DOWNLOAD INVOICE =================
+  const downloadInvoice = (orderId) => {
+    const storedToken = localStorage.getItem("token");
+
+    if (!storedToken) {
+      toast.error("Please login again");
+      navigate("/login");
+      return;
+    }
+
+    const url = `${backendUrl}/api/order/invoice/${orderId}`;
+    window.open(`${url}?token=${storedToken}`, "_blank");
+  };
+
   useEffect(() => {
     loadOrderData();
   }, [token]);
 
   return (
     <div className="min-h-screen bg-[#f6f7fb] pt-20 px-4 md:px-10 font-sans">
-      {/* Header */}
+      {/* HEADER */}
       <div className="mb-10">
         <Title text1={"ORDER"} text2={"JOURNEY"} />
         <p className="text-sm text-gray-500 mt-1 tracking-wide">
@@ -100,14 +118,14 @@ const Orders = () => {
                 transition-transform group-hover:scale-110"
               ></div>
 
-              {/* Card */}
+              {/* ORDER CARD */}
               <div
                 className="bg-white rounded-2xl p-5 md:p-6
                 border border-gray-200 shadow-sm
                 hover:shadow-lg transition-all duration-300"
               >
-                <div className="flex flex-col md:flex-row md:justify-between gap-5">
-                  {/* Product Info */}
+                <div className="flex flex-col md:flex-row md:justify-between gap-6">
+                  {/* PRODUCT INFO */}
                   <div className="flex gap-4">
                     <img
                       src={item.image[0]}
@@ -135,27 +153,48 @@ const Orders = () => {
                     </div>
                   </div>
 
-                  {/* Status & Action */}
-                  <div className="flex md:flex-col md:items-end justify-between gap-4">
-                    <span
-                      className="px-3 py-1 rounded-full text-xs font-semibold
-                      bg-indigo-50 text-indigo-700"
-                    >
-                      {item.status}
-                    </span>
+                  {/* STATUS + ACTIONS */}
+                  <div className="w-full md:w-72 flex flex-col gap-4">
+                    {/* STATUS (CENTER) */}
+                    <div className="flex justify-center">
+                      <span
+                        className="px-3 py-1 rounded-full text-xs font-semibold
+                        bg-indigo-50 text-indigo-700"
+                      >
+                        {item.status}
+                      </span>
+                    </div>
 
-                    <button
-                      onClick={loadOrderData}
-                      className="text-sm font-medium px-5 py-2 rounded-lg
-                      bg-gray-900 text-white
-                      hover:bg-indigo-600 transition-colors"
-                    >
-                      Track Order
-                    </button>
+                    {/* BUTTONS */}
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
+                      {/* TRACK ORDER (CENTER) */}
+                      <button
+                        onClick={loadOrderData}
+                        className="w-full sm:w-auto sm:flex-1 text-sm font-medium
+                        px-6 py-2 rounded-lg
+                        bg-gray-900 text-white
+                        hover:bg-indigo-600 transition-colors"
+                      >
+                        Track Order
+                      </button>
+
+                      {/* DOWNLOAD INVOICE */}
+                      {item.status !== "Cancelled" && (
+                        <button
+                          onClick={() => downloadInvoice(item.orderId)}
+                          className="w-full sm:w-auto sm:flex-1 text-sm font-medium
+                          px-6 py-2 rounded-lg
+                          bg-black text-white
+                          hover:bg-gray-800 transition-colors"
+                        >
+                          Download Invoice
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Footer */}
+                {/* FOOTER */}
                 <div className="mt-4 pt-4 border-t flex justify-between items-center text-xs">
                   <span className="text-[13px] font-semibold text-gray-800">
                     Payment:

@@ -7,7 +7,7 @@ import {
   sendOrderSuccessWhatsApp,
   sendOrderStatusWhatsApp,
 } from "../utils/sendWhatsApp.js";
-
+import generateInvoice from "../utils/generateInvoice.js";
 // ================= CONFIG =================
 const currency = "inr";
 const deliveryCharge = 10;
@@ -356,6 +356,26 @@ const updateStatus = async (req, res) => {
     });
   }
 };
+
+//================================================
+
+export const downloadInvoice = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await orderModel.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    generateInvoice(order, res);
+  } catch (error) {
+    res.status(500).json({ message: "Invoice generation failed" });
+  }
+};
+
+//===================================================
 
 export {
   placeOrder,
