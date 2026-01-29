@@ -12,17 +12,14 @@ const Login = ({ setToken }) => {
     try {
       e.preventDefault();
 
-      // ✅ CORRECT ADMIN LOGIN ENDPOINT
       const response = await axios.post(backendUrl + "/api/user/admin", {
         email,
         password,
       });
 
       if (response.data.success) {
-        // ✅ SAVE ADMIN TOKEN PROPERLY
         localStorage.setItem("adminToken", response.data.token);
         setToken(response.data.token);
-
         toast.success(response.data.message);
       } else {
         toast.error(response.data.message);
@@ -49,7 +46,7 @@ const Login = ({ setToken }) => {
 
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 px-4">
         <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
-          {/* LEFT SIDE */}
+          {/* LEFT BRANDING – DESKTOP ONLY */}
           <div className="hidden md:flex flex-col items-center justify-center bg-slate-900 text-white p-8">
             <div className="relative mb-6">
               <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-20 h-14 border-4 border-white rounded-t-full"></div>
@@ -69,9 +66,29 @@ const Login = ({ setToken }) => {
             </p>
           </div>
 
-          {/* RIGHT SIDE */}
+          {/* RIGHT SIDE – LOGIN FORM */}
           <div className="p-8 sm:p-10 flex flex-col justify-center">
-            <h1 className="text-2xl font-bold text-slate-800 mb-6">
+            {/* MOBILE LOGO */}
+            <div className="md:hidden flex flex-col items-center mb-6">
+              <div className="relative mb-3">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-14 h-10 border-4 border-white rounded-t-full"></div>
+                <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+                  <img
+                    src={assets.kishore_trends1}
+                    alt="Kishore Trends Logo"
+                    className="w-16 h-16 object-contain zoom-animate"
+                  />
+                </div>
+              </div>
+              <h2 className="text-lg font-bold text-slate-800">
+                Kishore Trends
+              </h2>
+              <p className="text-xs text-slate-500 text-center">
+                Secure Admin Panel
+              </p>
+            </div>
+
+            <h1 className="text-2xl font-bold text-slate-800 mb-6 text-center md:text-left">
               Admin Login
             </h1>
 
@@ -104,7 +121,7 @@ const Login = ({ setToken }) => {
 
               <button
                 type="submit"
-                className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-2.5 font-semibold"
+                className="mt-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-2.5 font-semibold transition-all"
               >
                 Login
               </button>
